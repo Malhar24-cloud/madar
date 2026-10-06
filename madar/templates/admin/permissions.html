@@ -1,0 +1,41 @@
+{% extends "base.html" %}{% import "_m.html" as m %}{% block title %}الصلاحيات{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>الصلاحيات</h1><p>حدد لكل شخص وش يقدر يسوي. مثال: محمد «الرواتب»، وسارة «اعتماد الإجازات». كل تغيير يُسجل ويوصل لصاحبه إيميل.</p></div></div>
+<div class="callout">
+  <b>كيف تشتغل:</b> الدور يعطي صلاحيات جاهزة، وتقدر تعدلها بالمربعات. أي طلب يروح تلقائيًا لأصحاب الصلاحية المناسبة (الإجازة لمن عنده «الإجازات»، السلفة لمن عنده «الرواتب»...)، وإذا ما فيه أحد يروح لك.
+  مدير القسم يعتمد طلبات فريقه تلقائيًا بدون صلاحية إضافية. ما تقدر تعدّل صلاحياتك أنت، ولازم يبقى مدير موارد بشرية واحد على الأقل ({{ admins }} حاليًا).
+</div>
+<form class="filters" method="get"><div class="field"><label for="q">بحث</label><input class="input" id="q" name="q" value="{{ q }}" placeholder="اسم، بريد، رقم وظيفي"></div><div><button class="btn">بحث</button></div></form>
+<p class="note">{{ users|length }} من {{ total }} مستخدم{% if total > users|length %} · استخدم البحث للباقين{% endif %}</p>
+<ul class="list">
+{% for u in users %}
+  <li class="item" style="display:block">
+    <form method="post" action="{{ url_for('admin.permissions_save', user_id=u.id, q=q or None) }}" style="display:grid;gap:10px">{{ m.csrf() }}
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:end;justify-content:space-between">
+        <div><b>{{ u.display_name }}</b>{% if u.id == current_user.id %} <span class="chip c-mute">أنت</span>{% endif %}
+          <p>{{ u.login_name }}{% if u.employee %} · {{ u.employee.title }} · {{ u.employee.department }}{% endif %}{% if u.is_manager %} · مدير قسم{% endif %}{% if u.totp_secret %} · <span class="chip c-good">تحقق بخطوتين</span>{% endif %}</p></div>
+        <div class="field" style="min-width:200px"><label for="role{{ u.id }}">الدور</label>
+          <select class="input" id="role{{ u.id }}" name="role" {{ 'disabled' if u.id == current_user.id }}>
+            {% for r in assignable %}<option value="{{ r }}" {{ 'selected' if u.base_role == r }}>{{ roles[r] }}</option>{% endfor %}
+          </select></div>
+      </div>
+      {% if u.base_role == 'admin' %}
+        <p class="note">مدير الموارد البشرية عنده كل الصلاحيات.</p>
+      {% else %}
+      <input type="hidden" name="perms_shown" value="1">
+      <div style="display:flex;flex-wrap:wrap;gap:6px 18px">
+        {% for p in grantable %}<label class="check"><input type="checkbox" name="perms" value="{{ p }}" {{ 'checked' if p in u.effective_perms }} {{ 'disabled' if u.id == current_user.id }}> {{ perms[p] }}</label>{% endfor %}
+      </div>
+      {% endif %}
+      {% if u.id != current_user.id %}
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+        <button class="btn sm primary">حفظ</button>
+        <label class="check"><input type="checkbox" name="preset" value="1"> استخدم صلاحيات الدور الافتراضية</label>
+        {% if u.perms is none and u.base_role != 'admin' %}<span class="chip c-mute">افتراضي الدور</span>{% elif u.base_role != 'admin' %}<span class="chip c-gold">مخصص</span>{% endif %}
+      </div>
+      {% endif %}
+    </form>
+  </li>
+{% endfor %}
+</ul>
+{% endblock %}

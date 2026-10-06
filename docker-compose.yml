@@ -1,0 +1,62 @@
+# التشغيل: انسخ .env.example إلى .env وعدّل القيم، ثم: docker compose up -d
+# بعدها مرة وحدة: docker compose exec app flask --app wsgi create-admin you@company.com
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: madar
+      POSTGRES_USER: madar
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?اضبط POSTGRES_PASSWORD في .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://madar:${POSTGRES_PASSWORD}@db:5432/madar
+      AUTO_CREATE_TABLES: "false"
+      MADAR_ENV: production
+      SESSION_COOKIE_SECURE: "true"
+      TRUST_PROXY: "true"
+    depends_on: [db]
+
+  scheduler:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://madar:${POSTGRES_PASSWORD}@db:5432/madar
+      AUTO_CREATE_TABLES: "false"
+      MADAR_ENV: production
+      SESSION_COOKIE_SECURE: "true"
+    command: ["python", "-m", "madar.scheduler"]
+    depends_on: [app]
+
+  backup:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./backups:/backups
+    # نسخة يومية من قاعدة البيانات مع الاحتفاظ بآخر 14 نسخة
+    entrypoint: ["sh", "-c", "umask 077; while true; do pg_dump -h db -U madar madar | gzip > /backups/madar-$$(date +%Y%m%d-%H%M).sql.gz; ls -1t /backups/madar-*.sql.gz | tail -n +15 | xargs -r rm; sleep 86400; done"]
+    depends_on: [db]
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMAIN: ${DOMAIN:?اضبط DOMAIN في .env مثل hr.company.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on: [app]
+
+volumes:
+  pgdata:
+  caddy_data:

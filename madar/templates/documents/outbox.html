@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% block title %}المراسلات{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>المراسلات</h1><p>الرسائل الروتينية تُرسل تلقائيًا. الحساسة (إنذار، إنهاء خدمة، قرار تجديد) تبقى مسودة حتى يوافق مدير الموارد البشرية.</p></div>
+  <div class="actions"><a class="btn primary" href="{{ url_for('documents.compose') }}">{{ 'كتابة إيميل بالذكاء' if ai_on else 'مسودة جديدة' }}</a></div></div>
+<div class="kpis">
+  <div class="kpi hi"><label>بانتظار الموافقة</label><div class="v num">{{ counts.pending_approval }}</div></div>
+  <div class="kpi"><label>أُرسلت</label><div class="v num">{{ counts.sent }}</div></div>
+  <div class="kpi"><label>فشل الإرسال</label><div class="v num" style="color:{{ 'var(--bad)' if counts.failed else 'inherit' }}">{{ counts.failed }}</div></div>
+  <div class="kpi"><label>ملغاة</label><div class="v num">{{ counts.cancelled }}</div></div>
+</div>
+<div class="panel">
+  <div class="filters"><div class="seg">{% for k, t in [('pending','بانتظار الموافقة'),('sent','المرسلة'),('failed','الفاشلة'),('all','الكل')] %}<a class="{{ 'on' if show == k }}" href="?show={{ k }}">{{ t }}</a>{% endfor %}</div></div>
+  <ul class="list">{% for e in rows %}<li class="item"><span class="dot {{ {'pending_approval':'warn','sent':'good','failed':'bad'}.get(e.status,'') }}"></span>
+    <div><b><a href="{{ url_for('documents.email_view', email_id=e.id) }}">{{ e.subject }}</a></b><p>إلى {{ e.to_name or e.to_addr }} · {{ e.created_at|dt }}{% if e.error %} · {{ e.error }}{% endif %}</p></div>
+    <span class="side-r">{% if e.tag %}<span class="chip c-mute">{{ e.tag }}</span>{% endif %}{% if e.status == 'pending_approval' %}<span class="chip c-warn">مسودة{{ ' حساسة' if e.sensitive }}</span>{% elif e.status == 'failed' and current_user.can('admin') %}<form method="post" action="{{ url_for('documents.email_retry', email_id=e.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn sm">إعادة المحاولة</button></form>{% else %}<span class="chip {{ 'c-good' if e.status == 'sent' else 'c-mute' }}">{{ {'sent':'أُرسلت','cancelled':'ملغاة','failed':'فشل','queued':'في الطابور'}[e.status] }}</span>{% endif %}</span></li>
+  {% else %}<li class="empty">لا توجد رسائل هنا.</li>{% endfor %}</ul>
+</div>
+{% endblock %}

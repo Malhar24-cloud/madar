@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% import "_m.html" as m %}{% block title %}تعديل وظيفي أو مالي{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>طلب تعديل وظيفي أو مالي</h1><p>ترقية، نقل، تعديل راتب، مكافأة أو خصم. يمر على الموارد البشرية ثم الرواتب. إذا اعتُمد متأخرًا، النظام يحسب الفروقات بأثر رجعي ويضيفها للمسير القادم تلقائيًا.</p></div></div>
+<form class="panel" method="post" style="display:grid;gap:14px;max-width:760px">{{ m.csrf() }}
+  <div class="form-grid">
+    <div class="field"><label for="employee_id">الموظف</label><select class="input" id="employee_id" name="employee_id" required>{% for e in emps %}<option value="{{ e.id }}" {{ 'selected' if selected == e.id }}>{{ e.name }} · {{ e.title }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="kind">نوع التعديل</label><select class="input" id="kind" name="kind">{% for k, v in kinds.items() %}<option value="{{ k }}" {{ 'selected' if request.form.kind == k }}>{{ v }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="effective">تاريخ السريان</label><input class="input" id="effective" name="effective" type="date" required value="{{ request.form.effective or today.isoformat() }}"><small>تاريخ سابق = فروقات بأثر رجعي</small></div>
+    <div class="field"><label for="amount">المبلغ (للمكافأة أو الخصم)</label><input class="input num" id="amount" name="amount" type="number" min="0" value="{{ request.form.amount or '' }}"></div>
+    <div class="field"><label for="basic">الأساسي الجديد</label><input class="input num" id="basic" name="basic" type="number" min="0" value="{{ request.form.basic or '' }}"></div>
+    <div class="field"><label for="housing">السكن الجديد</label><input class="input num" id="housing" name="housing" type="number" min="0" value="{{ request.form.housing or '' }}"></div>
+    <div class="field"><label for="transport">النقل الجديد</label><input class="input num" id="transport" name="transport" type="number" min="0" value="{{ request.form.transport or '' }}"></div>
+    <div class="field"><label for="title">المسمى الجديد (للترقية)</label><input class="input" id="title" name="title" value="{{ request.form.title or '' }}"></div>
+    <div class="field"><label for="department">القسم الجديد (للنقل)</label><select class="input" id="department" name="department"><option value="">—</option>{% for d in depts %}<option {{ 'selected' if request.form.department == d }}>{{ d }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="manager_id">المدير الجديد (للنقل)</label><select class="input" id="manager_id" name="manager_id"><option value="">بدون تغيير</option>{% for mg in managers %}<option value="{{ mg.id }}">{{ mg.name }}</option>{% endfor %}</select></div>
+    <div class="field full"><label for="reason">السبب</label><input class="input" id="reason" name="reason" required maxlength="300" value="{{ request.form.reason or '' }}"></div>
+  </div>
+  <p class="note">اترك الحقول اللي ما تتغير فاضية. مبدأ الأربع عيون: اللي يرفع الطلب ما يقدر يعتمده.</p>
+  <div class="actions"><button class="btn primary">إرسال للاعتماد</button></div>
+</form>
+{% endblock %}

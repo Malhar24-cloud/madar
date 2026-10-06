@@ -1,0 +1,4 @@
+<li class="item {{ 'done' if t.done }}"><span class="dot {{ 'good' if t.done else ('bad' if t.due and t.due < today_date() else '') }}"></span>
+  <div><b>{% if t.link %}<a href="{{ t.link }}">{{ t.title }}</a>{% else %}{{ t.title }}{% endif %}</b><p>{{ t.detail }}{% if current_user.can('admin') %} · <span class="chip c-mute">{{ role_names.get(t.role, t.role) }}</span>{% endif %}</p></div>
+  <span class="side-r">{% if not t.done %}<span class="note num">{{ t.due|d }}</span><form method="post" action="{{ url_for('main.task_done', task_id=t.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn sm good">إنجاز</button></form>{% else %}<span class="note">أُنجزت</span>{% endif %}</span>
+</li>

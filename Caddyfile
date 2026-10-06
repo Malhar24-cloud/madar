@@ -1,0 +1,15 @@
+# Caddy يصدر شهادة HTTPS تلقائيًا للدومين
+{$DOMAIN} {
+    encode gzip
+    request_body {
+        max_size 6MB
+    }
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        -Server
+        -Via
+    }
+    reverse_proxy app:8000 {
+        header_up X-Forwarded-For {remote_host}
+    }
+}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% import "_m.html" as m %}{% block title %}تقرير التأخير{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>تقرير التأخير</h1><p>عند مين الطلبات معلقة ومن متى، وكم يأخذ كل شخص عادة ليقرر. بدون مكالمات ولا متابعة يدوية.</p></div></div>
+<div class="panel"><div class="panel-h"><h2>الطلبات المعلقة حسب الشخص</h2><span>الأقدم أولًا</span></div>
+  <div class="tbl"><table><thead><tr><th>الشخص</th><th>عدد الطلبات</th><th>أقدم طلب</th><th>الطلبات</th></tr></thead><tbody>
+  {% for row in rows %}<tr><td><b>{{ row.user.display_name }}</b><br><small class="note">{{ row.user.role_label }}</small></td><td class="num">{{ row.count }}</td>
+    <td><span class="chip {{ 'c-bad' if row.oldest >= 48 else ('c-warn' if row.oldest >= 24 else 'c-good') }}">{{ row.oldest|round|int }} ساعة</span></td>
+    <td>{% for r in row.reqs[:4] %}<a href="{{ url_for('requests.detail', req_id=r.id) }}">{{ label(r) }} · {{ r.employee.name }}</a>{% if r.escalated_to_id %} <span class="chip c-bad">مُصعّد</span>{% endif %}<br>{% endfor %}</td></tr>
+  {% else %}<tr><td colspan="4" class="empty">لا توجد طلبات معلقة.</td></tr>{% endfor %}</tbody></table></div></div>
+<div class="panel"><div class="panel-h"><h2>متوسط وقت القرار</h2><span>من وصول الطلب حتى القرار</span></div>
+  <div class="tbl"><table style="min-width:420px"><thead><tr><th>الشخص</th><th>عدد القرارات</th><th>المتوسط</th></tr></thead><tbody>
+  {% for actor, n, avg in speed %}<tr><td>{{ actor }}</td><td class="num">{{ n }}</td><td class="num">{{ '%.1f'|format(avg) }} ساعة</td></tr>{% else %}<tr><td colspan="3" class="empty">لا توجد قرارات مسجلة بعد.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endblock %}

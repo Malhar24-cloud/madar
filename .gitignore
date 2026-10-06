@@ -1,0 +1,12 @@
+.env
+instance/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.db
+*.sqlite3
+.venv/
+backups/
+*.sql.gz
+*.xlsx
+.vscode/

@@ -1,0 +1,5 @@
+<div class="doc">{% include "letters/_head.html" %}
+<h3>شهادة خبرة</h3>
+<p>تشهد {{ company }} بأن السيد/ة <b>{{ emp.name }}</b>، {{ emp.nationality }} الجنسية، عمل لديها بوظيفة {{ emp.title }} في قسم {{ emp.department }} خلال الفترة من <span class="num">{{ emp.hire_date.strftime('%Y/%m/%d') }}</span> {% if emp.left_date %}إلى <span class="num">{{ emp.left_date.strftime('%Y/%m/%d') }}</span>{% else %}وحتى تاريخه{% endif %}.</p>
+<p>وقد أُعطيت له هذه الشهادة بناءً على طلبه دون أدنى مسؤولية على الشركة.</p>
+<div class="sig"><div>مدير الموارد البشرية</div><div>الختم</div></div></div>

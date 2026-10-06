@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% import "_m.html" as m %}{% block title %}الموظفون{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>{{ 'فريقي' if not current_user.can('employees_view','payroll','hiring','attendance') else 'الموظفون' }}</h1><p>{{ emps|length }} موظف</p></div>
+  <div class="actions">{% if current_user.can('hiring') %}<a class="btn" href="{{ url_for('employees.import_contract') }}">من عقد بالذكاء</a><a class="btn primary" href="{{ url_for('employees.new') }}">موظف جديد</a>{% endif %}</div></div>
+<div class="panel">
+  <form class="filters" method="get">
+    <div class="field" style="flex:1 1 220px"><label for="q">بحث</label><input class="input" id="q" name="q" type="search" value="{{ term }}" placeholder="الاسم أو المسمى أو الرمز"></div>
+    {% if current_user.can('employees_view','payroll','hiring','attendance') %}<div class="field"><label for="dept">القسم</label><select class="input" id="dept" name="dept"><option value="">كل الأقسام</option>{% for d in depts %}<option {{ 'selected' if d == dept }}>{{ d }}</option>{% endfor %}</select></div>{% endif %}
+    <div class="field"><label for="status">الحالة</label><select class="input" id="status" name="status">{% for k, t in [('active','على رأس العمل'),('left','منتهية خدمته'),('all','الكل')] %}<option value="{{ k }}" {{ 'selected' if k == status }}>{{ t }}</option>{% endfor %}</select></div>
+    <button class="btn">تطبيق</button>
+  </form>
+  <div class="tbl"><table><thead><tr><th>الموظف</th><th>القسم</th><th>الإجازات</th><th>المباشرة</th><th>العقد</th><th>الحالة</th></tr></thead><tbody>
+  {% for e in emps %}<tr><td><a class="row" href="{{ url_for('employees.detail', emp_id=e.id) }}">{{ m.who(e) }}</a></td><td>{{ e.department }}</td><td>{{ m.leave(e) }}</td><td class="num">{{ e.hire_date|d }}</td><td>{{ e.contract_label }}</td><td>{{ m.status(e) }}</td></tr>
+  {% else %}<tr><td colspan="6" class="empty">لا يوجد موظف يطابق البحث.</td></tr>{% endfor %}
+  </tbody></table></div>
+</div>
+{% endblock %}

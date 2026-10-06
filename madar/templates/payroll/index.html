@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% import "_m.html" as m %}{% block title %}الرواتب {{ month }}{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>مسير الرواتب · {{ month }}</h1><p>محسوب من الرواتب والبدلات والتأمينات والسلف والتعديلات والغياب. يوم الإغلاق {{ cutoff|d }}: أي طلب مالي بعده يدخل مسير الشهر الجاي تلقائيًا.</p></div>
+  <form class="actions" method="get"><input class="input" type="month" name="month" value="{{ month }}" style="width:auto" aria-label="الشهر"><button class="btn">عرض</button></form></div>
+{% if run %}
+  <div class="callout good">اعتُمد المسير {{ run.approved_at|dt }} UTC بواسطة {{ run.approved_by }}. أُرسلت الكشوف وخُصمت الأقساط وطُبقت التعديلات.</div>
+  <div class="panel" style="display:grid;gap:10px"><div class="panel-h" style="margin:0"><h2>حماية الأجور (مُدد)</h2>
+    <span>{% if run.wps_uploaded_at %}رُفع {{ run.wps_uploaded_at|dt }} بواسطة {{ run.wps_uploaded_by }}{% else %}لم يُرفع بعد. ارفعه في أقرب وقت لتفادي مخالفة مُدد{% endif %}</span></div>
+    <div class="actions"><a class="btn primary" href="{{ url_for('payroll.wps', month=month, fmt='xlsx') }}">تنزيل الملف Excel</a><a class="btn" href="{{ url_for('payroll.wps', month=month, fmt='csv') }}">CSV</a>
+    {% if not run.wps_uploaded_at %}<form method="post" action="{{ url_for('payroll.uploaded', month=month) }}">{{ m.csrf() }}<button class="btn good">رفعته على مُدد</button></form>{% endif %}</div>
+    <p class="note">الأعمدة: الهوية، الاسم، البنك، الآيبان، الأساسي، السكن، البدلات الأخرى، الخصومات، الصافي، تاريخ الدفع. القالب الرسمي يختلف حسب بنك المنشأة، فطابق ترتيب الأعمدة مع قالب بنككم قبل أول رفع.</p></div>
+{% else %}
+  <div class="panel"><div class="panel-h"><h2>جاهزية المسير</h2><span>{{ blockers }} عائق · {{ ready|length }} ملاحظة</span></div>
+    <ul class="list">{% for i in ready %}<li class="item"><span class="dot {{ i.level if i.level != 'info' else '' }}"></span><div><b><a href="{{ i.link }}">{{ i.title }}</a></b><p>{{ i.detail }}</p></div><span class="chip {{ {'bad':'c-bad','warn':'c-warn','info':'c-info'}[i.level] }}">{{ {'bad':'يعيق','warn':'يحتاج قرار','info':'للعلم'}[i.level] }}</span></li>
+    {% else %}<li class="empty">كل شي جاهز للاعتماد.</li>{% endfor %}</ul></div>
+{% endif %}
+<div class="kpis">
+  <div class="kpi hi"><label>الإجمالي</label><div class="v"><span class="num">{{ totals.gross|money }}</span><small>ريال</small></div><div class="sub">إضافات {{ totals.additions|money }}</div></div>
+  <div class="kpi"><label>تأمينات الموظفين</label><div class="v"><span class="num">{{ totals.gosi|money }}</span></div>{% if not run %}<div class="sub">حصة المنشأة {{ totals.employer_gosi|money }}</div>{% endif %}</div>
+  <div class="kpi"><label>السلف والخصومات</label><div class="v"><span class="num">{{ (totals.loan + totals.deductions)|money }}</span></div></div>
+  <div class="kpi"><label>صافي التحويل</label><div class="v"><span class="num">{{ totals.net|money }}</span><small>{{ rows|length }} حوالة</small></div></div>
+</div>
+<div class="panel"><div class="tbl"><table><thead><tr><th>الموظف</th><th>الإجمالي</th><th>إضافات</th><th>التأمينات</th><th>السلفة</th><th>خصومات</th><th>الصافي</th><th>ملاحظات</th></tr></thead><tbody>
+{% for r in rows %}<tr><td>{{ m.who(r.emp) }}</td><td class="num">{{ r.gross|money2 }}</td><td class="num" style="color:var(--good)">{{ ('+' ~ (r.additions|money2)) if r.additions else '—' }}</td>
+  <td class="num">{{ ('-' ~ (r.gosi|money2)) if r.gosi else '—' }}</td><td class="num">{{ ('-' ~ (r.loan|money2)) if r.loan else '—' }}</td><td class="num" style="color:var(--bad)">{{ ('-' ~ (r.deductions|money2)) if r.deductions else '—' }}</td>
+  <td class="num"><b>{% if r.slip %}<a href="{{ url_for('payroll.slip', slip_id=r.slip.id) }}">{{ r.net|money2 }}</a>{% else %}{{ r.net|money2 }}{% endif %}</b></td>
+  <td style="font-size:12.5px;color:var(--ink-2)">{{ r.notes|join(' · ') }}{% if r.unexplained %} <span class="chip c-warn">{{ r.unexplained }} غياب بلا قرار</span>{% endif %}</td></tr>{% endfor %}
+</tbody><tfoot><tr><td>الإجمالي</td><td class="num">{{ totals.gross|money2 }}</td><td class="num">{{ totals.additions|money2 }}</td><td class="num">{{ totals.gosi|money2 }}</td><td class="num">{{ totals.loan|money2 }}</td><td class="num">{{ totals.deductions|money2 }}</td><td class="num">{{ totals.net|money2 }}</td><td></td></tr></tfoot></table></div></div>
+{% if not run %}<form class="panel" method="post" action="{{ url_for('payroll.approve') }}" style="display:grid;gap:10px">{{ m.csrf() }}<input type="hidden" name="month" value="{{ month }}">
+  {% if blockers %}<div class="callout bad">فيه {{ blockers }} عائق في قائمة الجاهزية. تقدر تعتمد، بس الطلبات المعلقة ما بتدخل هذا المسير.</div>{% endif %}
+  {% if unexplained %}<label class="check"><input type="checkbox" name="deduct_absence" value="yes"> خصم أيام الغياب اللي ما اتُّخذ فيها قرار ({{ unexplained }} يوم)</label>{% endif %}
+  <label class="check"><input type="checkbox" name="confirm" value="yes" required> راجعت المسير وأعتمده ({{ totals.net|money }} ريال)</label>
+  <div><button class="btn primary">اعتماد المسير وإرسال الكشوف</button></div></form>{% endif %}
+{% if runs %}<div class="panel"><div class="panel-h"><h2>المسيرات المعتمدة</h2></div><ul class="list">{% for x in runs %}<li class="item"><span class="dot {{ 'good' if x.wps_uploaded_at else 'warn' }}"></span><div><b><a href="?month={{ x.month }}">{{ x.month }}</a></b><p>صافي {{ x.total_net|money }} · {{ x.approved_by }}</p></div><span class="chip {{ 'c-good' if x.wps_uploaded_at else 'c-warn' }}">{{ 'حماية الأجور مرفوعة' if x.wps_uploaded_at else 'لم تُرفع' }}</span></li>{% endfor %}</ul></div>{% endif %}
+{% endblock %}

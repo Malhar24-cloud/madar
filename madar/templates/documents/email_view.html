@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% block title %}{{ m.subject }}{% endblock %}
+{% block content %}
+{% set draft = m.status == 'pending_approval' %}
+<div class="topbar"><div><h1>{{ 'مراجعة مسودة' if draft else 'رسالة' }}</h1><p>إلى {{ m.to_name }} · <span class="mono">{{ m.to_addr }}</span></p></div></div>
+{% if m.sensitive and draft %}<div class="callout warn">رسالة حساسة. راجع الوقائع والأرقام قبل الإرسال.</div>{% endif %}
+<form class="panel" method="post" style="display:grid;gap:12px;max-width:820px">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="field"><label for="subject">الموضوع</label><input class="input" id="subject" name="subject" value="{{ m.subject }}" {{ '' if draft and current_user.can('admin') else 'readonly' }}></div>
+  <div class="field"><label for="body">النص</label><textarea class="input" id="body" name="body" rows="14" {{ '' if draft and current_user.can('admin') else 'readonly' }}>{{ m.body }}</textarea></div>
+  {% for label, url in m.actions or [] %}<p class="note">زر في الإيميل: <b>{{ label }}</b> (رابط آمن لمرة واحدة)</p>{% endfor %}
+  {% if draft and current_user.can('admin') %}
+    <div class="actions"><button class="btn primary" name="action" value="send">اعتماد وإرسال</button>
+    {% if ai_on %}<button class="btn" name="action" value="rewrite">تحسين الصياغة بالذكاء</button>{% endif %}
+    <button class="btn danger" name="action" value="cancel">إلغاء المسودة</button></div>
+  {% elif draft %}<p class="note">الإرسال يحتاج موافقة مدير الموارد البشرية.</p>
+  {% else %}<p class="note">الحالة: {{ {'sent':'أُرسلت','cancelled':'ملغاة','failed':'فشل الإرسال','queued':'في الطابور'}[m.status] }}{% if m.sent_at %} · {{ m.sent_at|dt }} UTC{% endif %}{% if m.approved_by %} · اعتمدها {{ m.approved_by }}{% endif %}</p>{% endif %}
+</form>
+{% endblock %}

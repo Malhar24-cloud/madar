@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% import "_m.html" as m %}{% block title %}{{ label }} #{{ r.id }}{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>{{ label }} · {{ r.employee.name }}</h1><p>طلب رقم {{ r.id }} · {{ summary }}</p></div><div class="actions">{{ m.req_chip(r, stage_labels) }}</div></div>
+<div class="grid-2">
+  <div class="panel" style="display:grid;gap:14px"><div class="panel-h" style="margin:0"><h2>المسار</h2></div>{{ m.timeline(r, stage_labels) }}
+    {% if r.type == 'leave' %}<div class="callout">رصيد الموظف الحالي {{ r.employee.leave_left }} يوم من {{ r.employee.entitlement }}.</div>{% endif %}
+    {% if r.type == 'loan' and current_user.can('payroll') %}<div class="callout">الحد المسموح {{ (r.employee.basic * p.LOAN_MAX_BASIC_MULTIPLE)|money }} ريال · القسط {{ (r.data.amount / r.data.months)|money }} ريال ({{ ((r.data.amount / r.data.months) / r.employee.gross * 100)|round|int }}% من الراتب).</div>{% endif %}
+    {% if can %}
+    <form method="post" action="{{ url_for('requests.decide', req_id=r.id) }}" style="display:grid;gap:10px">{{ m.csrf() }}
+      <div class="field"><label for="note">ملاحظة (تظهر للموظف عند الرفض)</label><input class="input" id="note" name="note" maxlength="300"></div>
+      <div class="actions"><button class="btn primary" name="decision" value="approve">اعتماد</button><button class="btn danger" name="decision" value="reject">رفض</button></div>
+    </form>{% endif %}</div>
+  <div class="panel"><div class="panel-h"><h2>السجل</h2></div>
+    <ul class="hist">{% for ev in r.events %}<li>{{ ev.action }} · <b>{{ ev.actor }}</b>{% if ev.note %}<br>{{ ev.note }}{% endif %}<small>{{ ev.at|dt }} UTC{% if ev.hours is not none %} · بعد {{ '%.1f'|format(ev.hours) }} ساعة من وصوله{% endif %}</small></li>{% endfor %}
+    {% if r.status == 'pending' %}<li>بانتظار {{ stage_labels[r.current_stage] }} منذ <b>{{ r.hours_waiting|round|int }} ساعة</b>{% if r.escalated_to %} · مُصعّد إلى {{ r.escalated_to.display_name }}{% endif %}</li>{% endif %}</ul>
+    {% if r.payroll_month %}<p class="note" style="margin-top:10px">أثره المالي يدخل مسير <b>{{ r.payroll_month }}</b>.</p>{% endif %}</div>
+</div>
+{% endblock %}

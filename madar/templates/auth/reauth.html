@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block title %}تأكيد الهوية{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>تأكيد الهوية</h1><p>هذي عملية حساسة. أدخل كلمة المرور{{ ' ورمز التحقق' if needs_code }} للمتابعة. التأكيد صالح 10 دقائق.</p></div></div>
+<form class="panel" method="post" style="display:grid;gap:12px;max-width:420px">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="next" value="{{ nxt }}">
+  {% if error %}<div class="flash bad">{{ error }}</div>{% endif %}
+  <div class="field"><label for="password">كلمة المرور</label><input class="input" id="password" name="password" type="password" autocomplete="current-password" required autofocus></div>
+  {% if needs_code %}<div class="field"><label for="code">رمز التحقق من التطبيق</label><input class="input num" id="code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]{6,7}" required></div>{% endif %}
+  <div><button class="btn primary">تأكيد</button> <a class="btn" href="{{ url_for('main.dashboard') }}">رجوع</a></div>
+</form>
+{% endblock %}

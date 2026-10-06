@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% block title %}رموز التفعيل{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>{{ 'تم الاستيراد' if created else 'رمز تفعيل جديد' }}</h1>
+  <p>{% if created %}أُضيف {{ created|length }} موظف. اللي لهم بريد وصلهم رابط التفعيل.{% endif %}</p></div>
+  {% if codes %}<div class="actions"><button class="btn primary" type="button" data-print>طباعة الرموز</button></div>{% endif %}</div>
+{% if codes %}
+<div class="callout warn">هذي الرموز تظهر مرة وحدة فقط ولا تُحفظ في النظام. اطبعها وسلّم كل موظف رمزه باليد. الرمز صالح 14 يومًا، ويُلغى بعد 5 محاولات خاطئة.</div>
+<div class="doc">
+  <h3>رموز تفعيل حسابات مدار</h3>
+  <p style="text-align:center">افتح {{ config.BASE_URL }}/activate وأدخل رقمك الوظيفي والرمز، ثم اختر كلمة مرورك.</p>
+  <table><thead><tr><th>الرقم الوظيفي</th><th>الاسم</th><th>رمز التفعيل</th><th>التوقيع بالاستلام</th></tr></thead><tbody>
+  {% for c in codes %}<tr><td class="num">{{ c.code }}</td><td>{{ c.name }}</td><td class="num" style="font-size:17px;font-weight:700">{{ c.activation }}</td><td></td></tr>{% endfor %}
+  </tbody></table>
+</div>{% endif %}
+<a class="btn no-print" href="{{ url_for('employees.index') }}">الموظفون</a>
+{% endblock %}

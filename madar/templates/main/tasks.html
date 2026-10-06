@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% block title %}صندوق المهام{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>صندوق المهام</h1><p>الأتمتة تنشئ المهام وتوزعها على المسؤول. أنت تتخذ القرار فقط.</p></div></div>
+<div class="panel">
+  <div class="filters"><div class="seg">{% for k, t in [('open','المفتوحة'),('done','المنجزة'),('all','الكل')] %}<a class="{{ 'on' if show == k }}" href="?show={{ k }}">{{ t }}</a>{% endfor %}</div></div>
+  <ul class="list">{% for t in items %}{% include "main/_task.html" %}{% else %}<li class="empty">لا توجد مهام هنا.</li>{% endfor %}</ul>
+</div>
+{% endblock %}

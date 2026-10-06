@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% import "_m.html" as m %}{% block title %}استيراد موظفين{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>استيراد الموظفين من Excel</h1><p>نزّل القالب، عبّه من بياناتكم الحالية، وارفعه. النظام يفحص كل صف ويوريك الأخطاء قبل ما يحفظ أي شي.</p></div>
+  <div class="actions"><a class="btn" href="{{ url_for('admin.import_template') }}">تنزيل القالب</a></div></div>
+{% if not results %}
+<form class="panel" method="post" enctype="multipart/form-data" style="display:grid;gap:12px;max-width:640px">{{ m.csrf() }}
+  <input type="hidden" name="action" value="validate">
+  <div class="field"><label for="file">ملف الموظفين</label><input class="input" id="file" name="file" type="file" accept=".xlsx,.csv" required><small>Excel أو CSV من القالب</small></div>
+  <div><button class="btn primary">فحص الملف</button></div>
+</form>
+<div class="panel"><div class="panel-h"><h2>أعمدة القالب</h2><span>* إلزامي</span></div>
+  <div class="tbl"><table style="min-width:520px"><tbody>{% for key, label, req, help in columns %}<tr><td><b>{{ label }}</b>{{ ' *' if req }}</td><td class="mono" style="font-size:12px">{{ key }}</td><td class="note">{{ help }}</td></tr>{% endfor %}</tbody></table></div></div>
+<div class="callout">الموظفون اللي لهم بريد يوصلهم رابط تفعيل. اللي ما لهم بريد (العمال الميدانيين) يطلع لهم رمز تفعيل تطبعه وتسلمه لهم، ويدخلون برقمهم الوظيفي.</div>
+{% else %}
+<div class="kpis">
+  <div class="kpi hi"><label>صفوف صالحة</label><div class="v num">{{ ok }}</div></div>
+  <div class="kpi"><label>فيها أخطاء</label><div class="v num" style="color:{{ 'var(--bad)' if results|length - ok else 'inherit' }}">{{ results|length - ok }}</div></div>
+</div>
+<div class="panel"><div class="tbl"><table><thead><tr><th>#</th><th>الاسم</th><th>القسم</th><th>الأساسي</th><th>البريد</th><th>النتيجة</th></tr></thead><tbody>
+{% for r in results %}<tr><td class="num">{{ r.row }}</td><td>{{ r.data.name }}</td><td>{{ r.data.department }}</td><td class="num">{{ r.data.basic or '' }}</td><td class="mono" style="font-size:12px">{{ r.data.email or 'بدون بريد' }}</td>
+<td>{% if r.errors %}<span class="chip c-bad">{{ r.errors|join('، ') }}</span>{% else %}<span class="chip c-good">جاهز</span>{% endif %}</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% if ok %}<form class="panel" method="post" style="display:grid;gap:10px">{{ m.csrf() }}
+  <input type="hidden" name="action" value="commit"><input type="hidden" name="payload" value="{{ payload }}">
+  <p style="margin:0">{{ 'سيُستورد ' ~ ok ~ ' موظف. الصفوف اللي فيها أخطاء تُتجاهل: صححها في الملف وارفعها مرة ثانية.' }}</p>
+  <div class="actions"><button class="btn primary">استيراد {{ ok }} موظف</button><a class="btn ghost" href="{{ url_for('admin.import_employees') }}">رفع ملف آخر</a></div>
+</form>{% else %}<a class="btn" href="{{ url_for('admin.import_employees') }}">صحح الملف وارفعه مرة ثانية</a>{% endif %}
+{% endif %}
+{% endblock %}

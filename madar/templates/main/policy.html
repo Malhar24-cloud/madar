@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% block title %}السياسات{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>السياسات والأحكام</h1><p>القواعد اللي يطبقها النظام في كل حساب. كل قيمة قابلة للتخصيص لكل شركة من ملف policy.py.</p></div></div>
+<div class="callout warn">القيم الافتراضية مبنية على نظام العمل السعودي كما نفهمه وقت إعداد النظام. أي تطبيق فعلي يحتاج مراجعة مختص قانوني.</div>
+<div class="pol-grid">
+  <div class="pol"><h3>الإجازة السنوية</h3><div class="v">{{ p.LEAVE_BASE }} / {{ p.LEAVE_SENIOR }} يوم</div><p>ترتفع بعد {{ p.SENIOR_YEARS }} سنوات خدمة. {{ rule_text('leave') }}.</p><small>المادة 109</small></div>
+  <div class="pol"><h3>فترة التجربة</h3><div class="v">{{ p.PROBATION_DAYS }} يوم</div><p>تمدد كتابيًا بحد أقصى {{ p.PROBATION_MAX }} يومًا. تنبيه للمدير قبل نهايتها بـ{{ p.PROBATION_ALERT_DAYS }} يومًا.</p><small>المادة 53</small></div>
+  <div class="pol"><h3>ساعات العمل</h3><div class="v">{{ p.DAILY_HOURS }} يوميًا</div><p>بحد {{ p.WEEKLY_HOURS }} ساعة أسبوعيًا.</p><small>المادة 98</small></div>
+  <div class="pol"><h3>مكافأة نهاية الخدمة</h3><div class="v">½ ثم 1 شهر</div><p>نصف أجر شهر لكل سنة من أول خمس، ثم شهر. الاستقالة تُنقص المكافأة حسب المدة.</p><small>المادتان 84 و85</small></div>
+  <div class="pol"><h3>التأمينات</h3><div class="v">{{ '%.2f'|format(p.GOSI_EMPLOYEE*100) }}%</div><p>حصة الموظف السعودي من الأساسي والسكن بسقف {{ p.GOSI_CAP|money }}.</p><small>قيمة افتراضية تُراجع مع التأمينات</small></div>
+  <div class="pol"><h3>السلف</h3><div class="v">حد {{ p.LOAN_MAX_BASIC_MULTIPLE }} رواتب</div><p>سلفة واحدة قائمة، حتى {{ p.LOAN_MAX_MONTHS }} قسطًا، تُخصم آليًا من المسير.</p><small>سياسة الشركة</small></div>
+  <div class="pol"><h3>مهلة الإشعار</h3><div class="v">{{ p.NOTICE_EMPLOYER }} / {{ p.NOTICE_EMPLOYEE }} يوم</div><p>من صاحب العمل ومن الموظف. تنبيه تجديد العقد قبل {{ p.CONTRACT_ALERT_DAYS }} يومًا.</p><small>المادة 75</small></div>
+  <div class="pol"><h3>البدلات الافتراضية</h3><div class="v">سكن {{ (p.HOUSING_PCT*100)|round|int }}% · نقل {{ (p.TRANSPORT_PCT*100)|round|int }}%</div><p>تُحسب من الأساسي عند التعيين إذا لم تُحدد.</p><small>سياسة الشركة</small></div>
+  <div class="pol"><h3>الإقامات</h3><div class="v">{{ p.IQAMA_ALERT_DAYS }} يوم</div><p>تنبيه لمسؤول الرواتب وإيميل للموظف قبل انتهاء الإقامة.</p><small>سياسة الشركة</small></div>
+</div>
+<div class="panel"><div class="panel-h"><h2>الأمان والخصوصية</h2></div><ul style="margin:0;padding-inline-start:20px;display:grid;gap:6px;font-size:14px;color:var(--ink-2)">
+  <li>كل مستخدم يرى حسب دوره: الموظف بياناته فقط، المدير فريقه، الرواتب لمدير الموارد البشرية ومسؤول الرواتب فقط.</li>
+  <li>لا أحد يعتمد طلبه بنفسه، حتى مدير الموارد البشرية.</li>
+  <li>المساعد الذكي يطبق نفس الصلاحيات في الخادم، ولا تُرسل له أرقام الهوية أو الآيبان.</li>
+  <li>روابط الموافقة بالإيميل لمرة واحدة، تنتهي خلال مدة محددة، وتفتح صفحة تأكيد قبل التنفيذ.</li>
+  <li>الرسائل الحساسة (إنذار، إنهاء خدمة، قرار تجديد) لا تُرسل بدون موافقة بشرية.</li>
+  <li>عند إنهاء الخدمة يُعطّل الحساب فورًا وتنتهي كل جلساته وروابطه المعلقة.</li>
+</ul></div>
+{% endblock %}

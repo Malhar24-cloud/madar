@@ -1,0 +1,28 @@
+{% macro who(e) -%}
+<div class="who"><span class="av">{{ e.initials }}</span><div><b>{{ e.name }}</b><small>{{ e.title }} · <span class="num">{{ e.code }}</span></small></div></div>
+{%- endmacro %}
+{% macro leave(e) -%}
+{% set pct = (e.leave_left / e.entitlement * 100) if e.entitlement else 0 %}
+<div class="leave"><span><b class="num">{{ e.leave_left }}</b> من <span class="num">{{ e.entitlement }}</span> يوم</span><div class="meter {{ 'out' if e.leave_left == 0 else ('low' if pct < 30 else '') }}"><i style="width:{{ pct|round }}%"></i></div></div>
+{%- endmacro %}
+{% macro status(e) -%}
+{% if e.status == 'left' %}<span class="chip c-mute">منتهية خدمته</span>
+{% elif e.days_since_hire < 0 %}<span class="chip c-gold">بانتظار المباشرة</span>
+{% elif e.days_to_end is not none and e.days_to_end <= 90 %}<span class="chip {{ 'c-bad' if e.days_to_end <= 30 else 'c-warn' }}">ينتهي عقده خلال {{ e.days_to_end }} يوم</span>
+{% elif e.in_probation %}<span class="chip c-info">فترة تجربة · باقي {{ e.probation_left }} يوم</span>
+{% else %}<span class="chip c-good">على رأس العمل</span>{% endif %}
+{%- endmacro %}
+{% macro req_chip(r, stage_labels) -%}
+{% if r.status == 'approved' %}<span class="chip c-good">{{ 'اعتُمد تلقائيًا' if r.auto else 'معتمد' }}</span>
+{% elif r.status == 'rejected' %}<span class="chip c-bad">{{ 'رُفض تلقائيًا' if r.auto else 'مرفوض' }}</span>
+{% elif r.status == 'cancelled' %}<span class="chip c-mute">ملغى</span>
+{% else %}<span class="chip c-warn">بانتظار {{ stage_labels[r.current_stage] }}</span>{% endif %}
+{%- endmacro %}
+{% macro timeline(r, stage_labels) -%}
+<div class="tl"><span class="ok"><i></i>تقديم</span>
+{% if not r.stages or (r.auto and r.status == 'rejected') %}<span class="{{ 'no' if r.status == 'rejected' else 'ok' }}"><i></i>الأتمتة</span>
+{% else %}{% for s in r.stages %}
+<span class="{% if loop.index0 < r.stage_index %}ok{% elif loop.index0 == r.stage_index and r.status == 'pending' %}now{% elif loop.index0 == r.stage_index and r.status == 'rejected' %}no{% endif %}"><i></i>{{ stage_labels[s] }}</span>
+{% endfor %}{% endif %}</div>
+{%- endmacro %}
+{% macro csrf() -%}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{%- endmacro %}

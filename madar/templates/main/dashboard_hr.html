@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% import "_m.html" as m %}{% block title %}لوحة التحكم{% endblock %}
+{% block content %}
+<div class="topbar">
+  <div><h1>أهلًا {{ current_user.display_name.split()[0] }}</h1><p>{{ current_user.role_label }}{% if not current_user.is_staff %} · فريقك {{ emps|length - 1 }} موظف{% endif %}</p></div>
+  <div class="actions">
+    {% if current_user.can('admin') %}<form method="post" action="{{ url_for('main.run_daily') }}">{{ m.csrf() }}<button class="btn">تشغيل الفحص اليومي</button></form>{% endif %}
+    {% if current_user.can('hiring') %}<a class="btn primary" href="{{ url_for('employees.new') }}">موظف جديد</a>{% endif %}
+  </div>
+</div>
+<div class="kpis">
+  <div class="kpi hi"><label>إجراءات نفذتها الأتمتة هذا الشهر</label><div class="v"><span class="num">{{ auto_count }}</span><small>إجراء</small></div><div class="sub">{{ auto_requests }} طلب عولج بالكامل بدون تدخل</div></div>
+  <div class="kpi"><label>بانتظار قرارك</label><div class="v"><span class="num">{{ pending|length }}</span><small>طلب</small></div><div class="sub"><a href="{{ url_for('requests.index') }}">فتح الطلبات</a></div></div>
+  <div class="kpi"><label>{{ 'فريقي' if not current_user.is_staff else 'على رأس العمل' }}</label><div class="v"><span class="num">{{ emps|length }}</span><small>موظف</small></div><div class="sub">{{ expiring|length }} عقد ينتهي خلال 90 يوم</div></div>
+  {% if current_user.can('outbox') %}<div class="kpi"><label>مسودات حساسة</label><div class="v"><span class="num">{{ drafts }}</span><small>بانتظار موافقتك</small></div><div class="sub"><a href="{{ url_for('documents.outbox') }}">المراسلات</a></div></div>
+  {% elif by_dept %}<div class="kpi"><label>مسير الرواتب الشهري</label><div class="v"><span class="num">{{ by_dept|sum(attribute=1)|money }}</span><small>ريال</small></div><div class="sub"><a href="{{ url_for('payroll.index') }}">مسير {{ month }}</a></div></div>
+  {% else %}<div class="kpi"><label>مهامي المفتوحة</label><div class="v"><span class="num">{{ my_tasks|length }}</span></div></div>{% endif %}
+</div>
+<div class="grid-2">
+  <div class="panel"><div class="panel-h"><h2>مهامي</h2><a href="{{ url_for('main.tasks') }}">كل المهام</a></div>
+    <ul class="list">{% for t in my_tasks %}{% include "main/_task.html" %}{% else %}<li class="empty">لا توجد مهام مفتوحة.</li>{% endfor %}</ul></div>
+  <div class="panel"><div class="panel-h"><h2>طلبات بانتظار قرارك</h2></div>
+    <ul class="list">{% for r in pending[:6] %}<li class="item"><span class="dot warn"></span><div><b><a href="{{ url_for('requests.detail', req_id=r.id) }}">{{ req_label(r) }} · {{ r.employee.name }}</a></b><p>{{ req_summary(r) }}</p></div><span class="note">{{ r.created_at|d }}</span></li>{% else %}<li class="empty">لا يوجد شيء بانتظارك.</li>{% endfor %}</ul></div>
+</div>
+<div class="grid-2e">
+  {% if by_dept %}<div class="panel"><div class="panel-h"><h2>الرواتب حسب القسم</h2><span>إجمالي شهري بالريال</span></div>
+    {% set mx = by_dept[0][1] %}<div class="bars">{% for d, v in by_dept %}<div class="bar-row"><span>{{ d }}</span><div class="bar-track"><i style="width:{{ (v / mx * 100)|round }}%"></i></div><span class="num">{{ v|money }}</span></div>{% endfor %}</div></div>{% endif %}
+  <div class="panel"><div class="panel-h"><h2>عقود تنتهي قريبًا</h2><span>خلال 90 يومًا</span></div>
+    <ul class="list">{% for e in expiring|sort(attribute='end_date') %}<li class="item"><span class="dot {{ 'bad' if e.days_to_end <= 30 else 'warn' }}"></span><div><b><a href="{{ url_for('employees.detail', emp_id=e.id) }}">{{ e.name }}</a></b><p>{{ e.title }} · ينتهي {{ e.end_date|d }}</p></div><span class="num">{{ e.days_to_end }} يوم</span></li>{% else %}<li class="empty">لا توجد عقود تنتهي قريبًا.</li>{% endfor %}</ul></div>
+  {% if feed %}<div class="panel"><div class="panel-h"><h2>آخر الأحداث</h2><a href="{{ url_for('main.audit') }}">سجل التدقيق</a></div>
+    <ul class="list">{% for a in feed %}<li class="item"><span class="dot {{ '' if a.automated else 'good' }}"></span><div><b>{{ a.action }}</b><p>{{ a.detail }}</p></div><span class="note">{{ 'آلي' if a.automated else a.actor.split('@')[0] }}</span></li>{% endfor %}</ul></div>{% endif %}
+</div>
+{% endblock %}

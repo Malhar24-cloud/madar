@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% import "_m.html" as m %}{% block title %}الخطابات{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>الخطابات</h1><p>كل خطاب يصدر برقم تسلسلي من قالب معتمد، ويُحفظ نسخة ثابتة منه في ملف الموظف.</p></div></div>
+<div class="grid-2">
+  <div class="panel"><div class="panel-h"><h2>السجل</h2><span>{{ rows|length }} خطاب</span></div>
+    <ul class="list">{% for l in rows %}<li class="item"><span class="dot {{ 'bad' if l.type in ('warning','term') }}"></span><div><b><a href="{{ url_for('documents.letter_view', letter_id=l.id) }}">{{ types[l.type] }} · {{ l.employee.name }}</a></b><p><span class="num">{{ l.number }}</span> · {{ l.created_at|d }}{% if l.request_id %} · بطلب من الموظف{% endif %}</p></div><span></span></li>{% else %}<li class="empty">لا توجد خطابات.</li>{% endfor %}</ul></div>
+  {% if emps %}<form class="panel" method="post" action="{{ url_for('documents.letter_new') }}" style="display:grid;gap:12px;align-content:start">{{ m.csrf() }}
+    <div class="panel-h" style="margin:0"><h2>إصدار خطاب</h2></div>
+    <div class="field"><label for="type">النوع</label><select class="input" id="type" name="type"><option value="salary">تعريف بالراتب</option><option value="exp">شهادة خبرة</option><option value="warning">إنذار كتابي</option></select></div>
+    <div class="field"><label for="employee_id">الموظف</label><select class="input" id="employee_id" name="employee_id">{% for e in emps %}<option value="{{ e.id }}">{{ e.name }} · {{ e.code }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="to">موجه إلى</label><input class="input" id="to" name="to" value="من يهمه الأمر"></div>
+    <div class="field"><label for="note">نص الإنذار (للإنذار فقط)</label><textarea class="input" id="note" name="note" rows="4"></textarea></div>
+    <p class="note">الإنذار يصدر، لكن إيميله يبقى مسودة حتى يوافق مدير الموارد البشرية.</p>
+    <div><button class="btn primary">إصدار</button></div></form>{% endif %}
+</div>
+{% endblock %}

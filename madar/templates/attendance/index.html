@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% import "_m.html" as m %}{% block title %}الحضور{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>الحضور والانصراف · {{ month }}</h1><p>البصمة تُطابق تلقائيًا مع الإجازات والاستئذانات. أي غياب بدون طلب يوصل للموظف تنبيه يطلب منه رفع طلب، وإذا ما رفع يوصل لمديره.</p></div>
+  <form class="actions" method="get"><input class="input" type="month" name="month" value="{{ month }}" style="width:auto" aria-label="الشهر"><button class="btn">عرض</button></form></div>
+{% if current_user.can('attendance') %}
+<form class="panel" method="post" action="{{ url_for('attendance.upload') }}" enctype="multipart/form-data" style="display:grid;gap:10px">{{ m.csrf() }}
+  <div class="panel-h" style="margin:0"><h2>استيراد ملف البصمة</h2><span>CSV أو Excel من جهاز الحضور</span></div>
+  <div class="filters" style="margin:0"><input class="input" type="file" name="file" accept=".csv,.txt,.xlsx" required style="flex:1 1 260px"><button class="btn primary">استيراد ومطابقة</button></div>
+  <p class="note">يتعرف النظام تلقائيًا على الأعمدة: رقم الموظف (مثل AC-No أو Code أو UserID) والوقت (Timestamp، أو Date و Time). اربط رقم كل موظف في الجهاز بحقل «رقم البصمة» في ملفه.</p>
+</form>{% endif %}
+<div class="panel"><div class="panel-h"><h2>أيام غياب بدون طلب</h2><span>تحتاج قرار: تبرير أو خصم</span></div>
+  <ul class="list">{% for a in absences %}<li class="item"><span class="dot bad"></span><div><b>{{ a.employee.name }} · {{ a.day|d }}</b><p>{{ a.note }}</p></div>
+    <span class="side-r">{% if a.employee_id != current_user.employee_id %}<form method="post" action="{{ url_for('attendance.decide', day_id=a.id) }}" class="actions">{{ m.csrf() }}
+      <input class="input" name="note" placeholder="ملاحظة" style="width:150px"><button class="btn sm good" name="decision" value="excuse">تبرير</button><button class="btn sm danger" name="decision" value="deduct">إقرار الخصم</button></form>{% endif %}</span></li>
+  {% else %}<li class="empty">لا يوجد غياب غير مبرر.</li>{% endfor %}</ul></div>
+<div class="panel"><div class="panel-h"><h2>ملخص الشهر</h2><div class="actions note"><span class="chip c-good">حضور</span><span class="chip c-warn">تأخير</span><span class="chip c-bad">غياب</span><span class="chip c-info">مبرر</span></div></div>
+  <div class="tbl"><table><thead><tr><th>الموظف</th><th>الأيام</th><th>تأخير</th><th>دقائق التأخير</th><th>غياب</th><th>مبرر</th></tr></thead><tbody>
+  {% for s in summ %}<tr><td>{{ m.who(s.emp) }}</td>
+    <td><div style="display:flex;flex-wrap:wrap;gap:3px;max-width:330px">{% for d in range(1, days_in_month + 1) %}{% set st = s.days.get(d) %}<i title="{{ d }}" style="width:10px;height:10px;border-radius:2px;display:inline-block;background:{{ {'present':'var(--good)','late':'var(--warn)','absent':'var(--bad)','deducted':'var(--bad)','excused':'var(--accent)'}.get(st, 'var(--surface-2)') }}"></i>{% endfor %}</div></td>
+    <td class="num">{{ s.late }}</td><td class="num">{{ s.late_minutes }}</td><td class="num" style="color:{{ 'var(--bad)' if s.absent else 'inherit' }}">{{ s.absent + s.deducted }}</td><td class="num">{{ s.excused }}</td></tr>
+  {% else %}<tr><td colspan="6" class="empty">لا توجد بيانات بصمة لهذا الشهر.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endblock %}

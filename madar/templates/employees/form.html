@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% import "_m.html" as m %}{% block title %}موظف جديد{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>{{ 'مراجعة بيانات العقد' if from_contract else 'موظف جديد' }}</h1><p>فورم واحد، والنظام ينشئ الحساب ويرسل الترحيب ورابط التفعيل ويوزع مهام التجهيز.</p></div></div>
+{% if from_contract %}<div class="callout">استخرج {{ engine }} البيانات من العقد. راجع كل حقل وعدّل أي خطأ قبل الاعتماد. الذكاء الاصطناعي يساعد، والقرار لك.</div>
+<div class="panel"><div class="panel-h"><h2>فحص المطابقة لنظام العمل</h2></div><ul class="risk">{% for r in risks %}<li>⚠ {{ r }}</li>{% else %}<li class="ok">لم تظهر مخالفات واضحة.</li>{% endfor %}</ul>
+{% if risks %}<p class="note" style="margin-top:8px">فترة التجربة قُصرت إلى الحد النظامي إن تجاوزته.</p>{% endif %}</div>{% endif %}
+{% if errors %}<div class="flash bad">{% for e in errors %}{{ e }}<br>{% endfor %}</div>{% endif %}
+<form class="panel" method="post" action="{{ url_for('employees.new') }}" style="display:grid;gap:14px">
+  {{ m.csrf() }}
+  <div class="form-grid">
+    <div class="field full"><label for="name">الاسم الكامل</label><input class="input" id="name" name="name" required value="{{ f.name or '' }}"></div>
+    <div class="field"><label for="email">البريد الوظيفي</label><input class="input mono" id="email" name="email" type="email" value="{{ f.email or '' }}"><small>فاضي للعامل بدون بريد: يطلع له رمز تفعيل تطبعه</small></div>
+    <div class="field"><label for="nationality">الجنسية</label><input class="input" id="nationality" name="nationality" required value="{{ f.nationality or 'سعودي' }}"></div>
+    <div class="field"><label for="department">القسم</label><select class="input" id="department" name="department" required><option value="">اختر</option>{% for d in depts %}<option {{ 'selected' if d == f.department }}>{{ d }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="title">المسمى الوظيفي</label><input class="input" id="title" name="title" required value="{{ f.title or '' }}"></div>
+    <div class="field"><label for="manager_id">المدير المباشر</label><select class="input" id="manager_id" name="manager_id"><option value="">—</option>{% for mg in managers %}<option value="{{ mg.id }}" {{ 'selected' if (f.manager_id|string) == (mg.id|string) }}>{{ mg.name }} · {{ mg.title }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="hire_date">تاريخ المباشرة</label><input class="input" id="hire_date" name="hire_date" type="date" required value="{{ f.hire_date or '' }}"></div>
+    <div class="field"><label for="basic">الراتب الأساسي</label><input class="input num" id="basic" name="basic" type="number" min="1" required value="{{ f.basic or '' }}"></div>
+    <div class="field"><label for="housing">بدل السكن</label><input class="input num" id="housing" name="housing" type="number" min="0" value="{{ f.housing or '' }}" placeholder="تلقائي 25%"></div>
+    <div class="field"><label for="transport">بدل النقل</label><input class="input num" id="transport" name="transport" type="number" min="0" value="{{ f.transport or '' }}" placeholder="تلقائي 10%"></div>
+    <div class="field"><label for="contract_type">نوع العقد</label><select class="input" id="contract_type" name="contract_type"><option value="open">غير محدد المدة</option><option value="fixed" {{ 'selected' if f.contract_type == 'fixed' }}>محدد المدة</option></select></div>
+    <div class="field"><label for="end_date">تاريخ انتهاء العقد</label><input class="input" id="end_date" name="end_date" type="date" value="{{ f.end_date or '' }}"><small>للعقد محدد المدة</small></div>
+    <div class="field"><label for="probation_days">فترة التجربة (يوم)</label><input class="input num" id="probation_days" name="probation_days" type="number" min="0" max="180" value="{{ f.probation_days or 90 }}"></div>
+    <div class="field"><label for="iqama_expiry">انتهاء الإقامة</label><input class="input" id="iqama_expiry" name="iqama_expiry" type="date" value="{{ f.iqama_expiry or '' }}"><small>لغير السعوديين</small></div>
+    <div class="field"><label for="national_id">رقم الهوية أو الإقامة</label><input class="input num" id="national_id" name="national_id" inputmode="numeric" maxlength="10" value="{{ f.national_id or '' }}"></div>
+    <div class="field"><label for="bank">البنك</label><input class="input" id="bank" name="bank" value="{{ f.bank or '' }}"></div>
+    <div class="field"><label for="iban">الآيبان</label><input class="input num" id="iban" name="iban" maxlength="34" value="{{ f.iban or '' }}" placeholder="SA…"></div>
+    <div class="field"><label for="phone">الجوال</label><input class="input num" id="phone" name="phone" inputmode="tel" value="{{ f.phone or '' }}"></div>
+    <div class="field"><label for="attendance_id">رقم البصمة</label><input class="input num" id="attendance_id" name="attendance_id" value="{{ f.attendance_id or '' }}"><small>الرقم في جهاز الحضور</small></div>
+    <div class="field full"><label class="check"><input type="checkbox" name="gosi_new_system" value="1" {{ 'checked' if f.gosi_new_system }}> سعودي مسجل في التأمينات لأول مرة بعد 2024-07-03 (نسب الاشتراك الجديدة)</label></div>
+    <div class="field full"><label for="clauses">بنود خاصة (سطر لكل بند)</label><textarea class="input" id="clauses" name="clauses" rows="3">{{ f.clauses or '' }}</textarea></div>
+  </div>
+  <div class="actions"><button class="btn primary">إضافة وتشغيل التعيين الآلي</button><a class="btn ghost" href="{{ url_for('employees.index') }}">إلغاء</a></div>
+</form>
+{% endblock %}

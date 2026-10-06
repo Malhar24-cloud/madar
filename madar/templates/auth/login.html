@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% block title %}تسجيل الدخول{% endblock %}
+{% block public %}
+<div class="auth"><form class="panel" method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <a class="brand" href="#"><i></i><div><b>مدار</b><small>{{ company }}</small></div></a>
+  <h1 style="font-size:20px">تسجيل الدخول</h1>
+  {% with msgs = get_flashed_messages(with_categories=true) %}{% for cat, m in msgs %}<div class="flash {{ cat }}">{{ m }}</div>{% endfor %}{% endwith %}
+  {% if error %}<div class="flash bad" role="alert">{{ error }}</div>{% endif %}
+  <div class="field"><label for="email">البريد أو الرقم الوظيفي</label><input class="input mono" id="email" name="email" type="text" autocomplete="username" required autofocus value="{{ request.form.email or '' }}" placeholder="name@company.com أو EMP-1018"></div>
+  <div class="field"><label for="password">كلمة المرور</label><input class="input" id="password" name="password" type="password" autocomplete="current-password" required></div>
+  <button class="btn primary" type="submit">دخول</button>
+  {% if sso %}<a class="btn" href="{{ url_for('auth.sso_start') }}">الدخول بحساب الشركة</a>{% endif %}
+  <p class="note">أول مرة وما عندك بريد؟ <a href="{{ url_for('auth.activate') }}">فعّل حسابك برمز التفعيل</a> اللي استلمته من الموارد البشرية.</p>
+  <p class="note">الحساب يُقفل 15 دقيقة بعد 5 محاولات فاشلة.</p>
+</form></div>
+{% endblock %}

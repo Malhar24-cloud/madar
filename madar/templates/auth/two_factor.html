@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% block title %}التحقق بخطوتين{% endblock %}
+{% block public %}
+<div class="auth"><form class="panel" method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <a class="brand" href="#"><i></i><div><b>مدار</b><small>{{ company }}</small></div></a>
+  <h1 style="font-size:20px">{{ 'فعّل التحقق بخطوتين' if setup else 'رمز التحقق' }}</h1>
+  {% if setup %}
+    <p style="margin:0;font-size:14px">حسابك فيه صلاحيات حساسة، فالتحقق بخطوتين إجباري. امسح الرمز بتطبيق Microsoft Authenticator أو Google Authenticator، ثم أدخل الرقم اللي يظهر.</p>
+    <div style="background:#fff;padding:12px;border-radius:10px;width:220px;justify-self:center" aria-label="رمز QR">{{ qr|safe }}</div>
+    <p class="note">أو أدخل المفتاح يدويًا: <span class="mono">{{ secret }}</span></p>
+  {% else %}<p style="margin:0;font-size:14px">أدخل الرقم المكوّن من 6 خانات من تطبيق المصادقة.</p>{% endif %}
+  {% if error %}<div class="flash bad" role="alert">{{ error }}</div>{% endif %}
+  <div class="field"><label for="code">الرمز</label><input class="input num" id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" required autofocus></div>
+  <button class="btn primary">تحقق</button>
+</form></div>
+{% endblock %}

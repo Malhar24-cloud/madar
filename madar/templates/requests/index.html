@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% import "_m.html" as m %}{% block title %}الطلبات{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>الطلبات والموافقات</h1><p>الموظف يقدّم، النظام يفحص ويعتمد الروتيني، والباقي يمر على المسؤول بالترتيب. كل موافق يوصله إيميل فيه رابط القرار.</p></div>
+  <div class="actions">{% if (current_user.can('changes','hiring','payroll') or current_user.is_manager) %}<a class="btn" href="{{ url_for('requests.change') }}">طلب تعديل وظيفي أو مالي</a>{% endif %}{% if current_user.employee %}<a class="btn primary" href="{{ url_for('requests.new', rtype='leave') }}">طلب إجازة</a>{% endif %}</div></div>
+<div class="panel">
+  <div class="filters"><div class="seg">
+    {% set tabs = [('mine','طلباتي')] if not (current_user.is_staff or current_user.is_manager) else [('action','بانتظار قراري'),('pending','كل المعلّقة'),('auto','عالجتها الأتمتة'),('mine','طلباتي'),('all','الكل')] %}
+    {% for k, t in tabs %}<a class="{{ 'on' if show == k }}" href="?show={{ k }}">{{ t }}</a>{% endfor %}</div></div>
+  <div class="tbl"><table><thead><tr><th>الموظف</th><th>الطلب</th><th>التفاصيل</th><th>المسار</th><th>الحالة</th></tr></thead><tbody>
+  {% for r in rows %}<tr><td>{{ m.who(r.employee) }}</td><td><a href="{{ url_for('requests.detail', req_id=r.id) }}"><b>{{ req_label(r) }}</b></a>{% if r.escalated_to_id and r.status == 'pending' %} <span class="chip c-bad">مُصعّد</span>{% endif %}<br><small class="note">#{{ r.id }} · {{ r.created_at|d }}</small></td><td>{{ summary(r) }}</td><td>{{ m.timeline(r, stage_labels) }}{% if r.status == 'pending' %}<small class="note">منذ {{ r.hours_waiting|round|int }} ساعة</small>{% endif %}</td><td>{{ m.req_chip(r, stage_labels) }}{% if can_act(current_user, r) %} <a class="btn sm primary" href="{{ url_for('requests.detail', req_id=r.id) }}">قرار</a>{% endif %}</td></tr>
+  {% else %}<tr><td colspan="5" class="empty">لا توجد طلبات هنا.</td></tr>{% endfor %}
+  </tbody></table></div>
+</div>
+{% if current_user.employee %}<div class="panel"><div class="panel-h"><h2>طلب جديد</h2></div><div class="actions">{% for k, t in types.items() if t.self %}<a class="btn" href="{{ url_for('requests.new', rtype=k) }}">{{ t.label }}</a>{% endfor %}</div></div>{% endif %}
+{% endblock %}

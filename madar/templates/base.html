@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}مدار{% endblock %} · مدار</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% if current_user.is_authenticated %}
+<div class="app">
+  <aside class="side">
+    <a class="brand" href="{{ url_for('main.dashboard') }}"><i></i><div><b>مدار</b><small>{{ company }}</small></div></a>
+    <nav class="nav" aria-label="الأقسام">
+      {% for ep, lbl in nav %}
+        <a href="{{ url_for(ep) }}" class="{{ 'on' if request.endpoint == ep else '' }}">{{ lbl }}{% if badges.get(ep) %}<span class="badge">{{ badges[ep] }}</span>{% endif %}</a>
+      {% endfor %}
+    </nav>
+    <div class="me">
+      <div><b>{{ current_user.display_name }}</b><br><small>{{ current_user.role_label }}</small></div>
+      <div class="actions">
+        <a class="btn sm ghost" href="{{ url_for('auth.change_password') }}">كلمة المرور</a>
+        <form method="post" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn sm">خروج</button></form>
+      </div>
+    </div>
+  </aside>
+  <main class="main">
+    {% if support %}<div class="flash bad" role="status">وضع الدعم الفني: قراءة فقط حتى {{ support.expires_at|dt }} UTC بإذن {{ support.granted_by }}. كل صفحة تفتحها تُسجل في سجل التدقيق.</div>{% endif %}
+    {% with msgs = get_flashed_messages(with_categories=true) %}{% for cat, m in msgs %}<div class="flash {{ cat }}" role="status">{{ m }}</div>{% endfor %}{% endwith %}
+    {% if back %}<a class="back" href="{{ back[0] }}">→ رجوع إلى {{ back[1] }}</a>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% else %}
+  {% block public %}{% endblock %}
+{% endif %}
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

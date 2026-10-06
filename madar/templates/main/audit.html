@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% block title %}سجل التدقيق{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>سجل التدقيق</h1><p>كل عملية آلية أو بشرية، مع الوقت والمنفذ وعنوان IP. السجل للإضافة فقط ولا توجد وظيفة لتعديله أو حذفه.</p></div></div>
+<div class="panel">
+  <div class="filters"><div class="seg">{% for k, t in [(None,'الكل'),('auto','الأتمتة'),('human','البشر')] %}<a class="{{ 'on' if only == k }}" href="{{ url_for('main.audit', only=k) if k else url_for('main.audit') }}">{{ t }}</a>{% endfor %}</div></div>
+  <div class="tbl"><table><thead><tr><th>الوقت (UTC)</th><th>المنفذ</th><th>الإجراء</th><th>التفاصيل</th><th>IP</th></tr></thead><tbody>
+  {% for a in rows %}<tr><td class="num">{{ a.at|dt }}</td><td>{% if a.automated %}<span class="chip c-info">الأتمتة</span>{% else %}<span class="mono" style="font-size:13px">{{ a.actor }}</span>{% endif %}</td><td><b>{{ a.action }}</b></td><td>{{ a.detail }}</td><td class="num">{{ a.ip or '—' }}</td></tr>{% endfor %}
+  </tbody></table></div>
+</div>
+{% endblock %}

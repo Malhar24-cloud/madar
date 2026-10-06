@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% block title %}حالة النظام{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>حالة النظام</h1><p>{{ 'للمسؤول التقني: تشوف صحة النظام بدون بيانات الموظفين. للاطلاع على البيانات تحتاج إذنًا مؤقتًا من مدير الموارد البشرية.' if current_user.base_role == 'operator' else 'نظرة تقنية على صحة النظام.' }}</p></div></div>
+<div class="kpis">
+  <div class="kpi {{ 'hi' if h.failed_emails == 0 }}"><label>إيميلات فشل إرسالها</label><div class="v num">{{ h.failed_emails }}</div><div class="sub">وضع البريد: {{ h.mail }}</div></div>
+  <div class="kpi"><label>طلبات معلقة</label><div class="v num">{{ h.pending_requests }}</div><div class="sub">{{ h.escalated }} مُصعّد</div></div>
+  <div class="kpi"><label>آخر فحص يومي</label><div class="v" style="font-size:16px">{{ h.last_daily.at|dt if h.last_daily else 'لم يعمل بعد' }}</div><div class="sub">UTC</div></div>
+  <div class="kpi"><label>آخر مسير معتمد</label><div class="v" style="font-size:18px">{{ h.last_run.month if h.last_run else '—' }}</div><div class="sub">{{ 'حماية الأجور مرفوعة' if h.last_run and h.last_run.wps_uploaded_at else ('حماية الأجور لم تُرفع' if h.last_run else '') }}</div></div>
+</div>
+<div class="grid-2e">
+  <div class="panel"><div class="panel-h"><h2>الإعدادات التقنية</h2></div><dl class="kv">
+    <div><dt>المستخدمون النشطون</dt><dd class="num">{{ h.users }}</dd></div><div><dt>الذكاء الاصطناعي</dt><dd>{{ 'مفعّل' if h.ai else 'معطّل' }}</dd></div>
+    <div><dt>الدخول الموحد</dt><dd>{{ h.sso }}</dd></div><div><dt>قاعدة البيانات</dt><dd>تعمل</dd></div></dl></div>
+  <div class="panel"><div class="panel-h"><h2>النسخ الاحتياطية</h2></div>
+    <ul class="list">{% for b in backups %}<li class="item"><span class="dot good"></span><div><b class="mono" style="font-size:13px">{{ b }}</b></div><span></span></li>{% else %}<li class="empty">لا توجد نسخ في مجلد النسخ. شغّل flask backup أو خدمة الجدولة.</li>{% endfor %}</ul></div>
+</div>
+{% if current_user.base_role == 'operator' %}<div class="callout {{ 'warn' if grant else '' }}">{{ ('عندك إذن دعم ساري حتى ' ~ (grant.expires_at|dt) ~ ' UTC: قراءة فقط، وكل صفحة تُسجل.') if grant else 'ما عندك إذن دعم حاليًا. اطلبه من مدير الموارد البشرية مع ذكر السبب.' }}</div>{% endif %}
+{% endblock %}

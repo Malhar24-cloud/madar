@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% block title %}كشف راتب {{ p.run.month }}{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>كشف راتب {{ p.run.month }}</h1><p>{{ p.employee.name }} · <span class="num">{{ p.employee.code }}</span></p></div><div class="actions"><button class="btn primary" type="button" data-print>طباعة أو حفظ PDF</button></div></div>
+<div class="doc" style="max-width:640px">
+  <div class="lh"><div><b>{{ company }}</b><br>كشف راتب</div><div style="text-align:left">الشهر: <span class="num">{{ p.run.month }}</span></div></div>
+  <p>{{ p.employee.name }} · {{ p.employee.title }} · {{ p.employee.department }}</p>
+  <div class="slip-row"><span>الراتب الأساسي</span><span class="num">{{ p.basic|money2 }}</span></div>
+  <div class="slip-row"><span>بدل السكن</span><span class="num">{{ p.housing|money2 }}</span></div>
+  <div class="slip-row"><span>بدل النقل</span><span class="num">{{ p.transport|money2 }}</span></div>
+  {% if p.proration < 1 %}<div class="slip-row"><span>الإجمالي التناسبي ({{ (p.proration * 100)|round|int }}%)</span><span class="num">{{ p.gross|money2 }}</span></div>{% endif %}
+  {% if p.additions %}<div class="slip-row plus"><span>إضافات</span><span class="num">+{{ p.additions|money2 }}</span></div>{% endif %}
+  <div class="slip-row minus"><span>التأمينات الاجتماعية</span><span class="num">-{{ p.gosi|money2 }}</span></div>
+  {% if p.loan %}<div class="slip-row minus"><span>قسط السلفة</span><span class="num">-{{ p.loan|money2 }}</span></div>{% endif %}
+  {% if p.deductions %}<div class="slip-row minus"><span>خصومات</span><span class="num">-{{ p.deductions|money2 }}</span></div>{% endif %}
+  {% if p.absence %}<div class="slip-row minus"><span>غياب</span><span class="num">-{{ p.absence|money2 }}</span></div>{% endif %}
+  <div class="slip-row total"><span>صافي الراتب</span><span class="num">{{ p.net|money2 }} ريال</span></div>
+  {% if p.notes %}<p class="note" style="margin-top:10px">{{ p.notes|join(' · ') }}</p>{% endif %}
+  <p class="note" style="margin-top:12px">يُحوّل إلى {{ p.bank or 'البنك' }} · <span class="num">{{ (p.iban[:4] ~ ' •••• ' ~ p.iban[-4:]) if p.iban else '' }}</span></p>
+</div>
+{% endblock %}

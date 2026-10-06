@@ -1,0 +1,7 @@
+<div class="doc">{% include "letters/_head.html" %}
+<h3>إشعار إنهاء خدمة</h3>
+<p>السيد/ة {{ emp.name }} المحترم/ة،</p>
+<p>نفيدكم بانتهاء علاقتكم التعاقدية مع {{ company }} اعتبارًا من <span class="num">{{ emp.left_date.strftime('%Y/%m/%d') if emp.left_date else date.strftime('%Y/%m/%d') }}</span>{% if emp.left_reason == 'resign' %} بناءً على استقالتكم{% endif %}.</p>
+<p>تُصرف مستحقاتكم النهائية البالغة <b class="num">{{ '{:,.2f}'.format(emp.final_amount or 0) }}</b> ريال بعد استكمال تسليم العهد والمخالصة.</p>
+<p>نشكركم على ما قدمتموه خلال فترة عملكم.</p>
+<div class="sig"><div>مدير الموارد البشرية</div><div>الختم</div></div></div>

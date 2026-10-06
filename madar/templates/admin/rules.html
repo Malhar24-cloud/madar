@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% import "_m.html" as m %}{% block title %}قواعد الطلبات{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>قواعد الطلبات</h1><p>لكل نوع طلب: هل يُعتمد تلقائيًا، وإلى كم يوم أو ساعة، ومن يعتمده إذا تجاوز الحد. التغيير ينطبق على الطلبات الجديدة.</p></div></div>
+<div class="callout">الفحص الآلي يشتغل دائمًا قبل أي اعتماد: الرصيد، الحد الشهري للاستئذان، التكرار، حد السلفة. الاعتماد التلقائي ما ينطبق على الطلب بأثر رجعي.
+  السلفة والاستقالة والتعديلات المالية ما تنقبل تلقائيًا أبدًا، والسلفة والتعديل المالي لازم يمرون على الرواتب.</div>
+<form class="panel" method="post" style="display:grid;gap:4px">{{ m.csrf() }}
+  <ul class="list">
+  {% for r in rows %}{% set t = r.type %}
+    <li class="item" style="display:block">
+      <div style="display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap"><b>{{ r.label }}</b><span class="note">الحالي: {{ r.text }}</span></div>
+      <div style="display:flex;gap:10px 22px;flex-wrap:wrap;align-items:end;margin-top:8px">
+        {% if r.def.can_auto %}
+          <label class="check"><input type="checkbox" name="{{ t }}_auto" value="1" {{ 'checked' if r.rule.auto }}> اعتماد تلقائي</label>
+          {% if r.def.unit %}
+          <div class="field" style="max-width:190px"><label for="{{ t }}_limit">إذا كان {{ units[r.def.unit] }} أو أقل</label>
+            <input class="input num" id="{{ t }}_limit" name="{{ t }}_limit" type="number" min="{{ 0.5 if r.def.unit == 'hours' else 1 }}" max="{{ r.def.max_limit }}" step="{{ 0.5 if r.def.unit == 'hours' else 1 }}" value="{{ r.rule.limit|round(1) if r.def.unit == 'hours' else r.rule.limit }}"><small>الحد الأعلى {{ r.def.max_limit }}</small></div>
+          {% endif %}
+        {% else %}
+          <span class="chip c-mute">لا يُعتمد تلقائيًا (ثابت)</span>
+        {% endif %}
+        <div style="display:flex;gap:6px 20px;flex-wrap:wrap;align-items:center"><span class="note">يعتمده:</span>
+          {% for s in order %}{% if not (t == 'change' and s == 'manager') %}
+            {% set req = s in r.def.get('required', []) %}
+            <label class="check"><input type="checkbox" name="{{ t }}_stages" value="{{ s }}" {{ 'checked' if s in r.rule.stages }} {{ 'disabled' if req }}>{% if req %}<input type="hidden" name="{{ t }}_stages" value="{{ s }}">{% endif %} {{ stage_labels[s] }}{{ ' (إلزامي)' if req }}</label>
+          {% endif %}{% endfor %}
+        </div>
+      </div>
+    </li>
+  {% endfor %}
+  </ul>
+  <div><button class="btn primary">حفظ القواعد</button></div>
+</form>
+{% endblock %}

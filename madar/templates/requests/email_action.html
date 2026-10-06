@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block title %}قرار على طلب{% endblock %}
+{% block public %}
+<div class="auth"><form class="panel" method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <a class="brand" href="#"><i></i><div><b>مدار</b><small>{{ company }}</small></div></a>
+  <h1 style="font-size:20px">{{ label }} · {{ r.employee.name }}</h1>
+  <p style="margin:0">{{ r.employee.title }} · {{ r.employee.department }}<br><b>{{ summary }}</b></p>
+  {% if r.data.reason %}<p class="note">السبب: {{ r.data.reason }}</p>{% endif %}
+  {% if r.type == 'leave' %}<div class="callout">رصيد الموظف {{ r.employee.leave_left }} يوم.</div>{% endif %}
+  <p class="note">القرار باسم {{ approver.display_name }} بصفة {{ stage }}. الرابط يُستخدم مرة واحدة.</p>
+  <div class="field"><label for="note">ملاحظة (اختياري)</label><input class="input" id="note" name="note" maxlength="300"></div>
+  <div class="actions"><button class="btn primary" name="decision" value="approve">موافق</button><button class="btn danger" name="decision" value="reject">رفض</button></div>
+</form></div>
+{% endblock %}
+{% block content %}{{ self.public() }}{% endblock %}

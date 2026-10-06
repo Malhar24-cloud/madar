@@ -1,0 +1,38 @@
+{% extends "base.html" %}{% import "_m.html" as m %}{% block title %}طلب {{ label }}{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>طلب {{ label }}</h1><p>يُفحص الطلب آليًا فور الإرسال، ويوصلك إيميل بكل تحديث.</p></div></div>
+<form class="panel" method="post" style="display:grid;gap:14px;max-width:620px">
+  {{ m.csrf() }}
+  {% if rtype == 'leave' %}
+    <div class="callout">رصيدك {{ e.leave_left }} يوم. {{ rule_text('leave') }}. الإجازة بأثر رجعي (لتبرير غياب) تمر على مديرك وتُرفع خلال 30 يومًا.</div>
+    <div class="form-grid"><div class="field"><label for="from">من تاريخ</label><input class="input" id="from" name="from" type="date" value="{{ default_from.isoformat() }}" required></div>
+    <div class="field"><label for="days">عدد الأيام</label><input class="input num" id="days" name="days" type="number" min="1" max="60" value="2" required></div>
+    <div class="field full"><label for="reason">ملاحظة (اختياري)</label><input class="input" id="reason" name="reason" maxlength="300"></div></div>
+  {% elif rtype == 'sick' %}
+    <div class="form-grid"><div class="field"><label for="from">من تاريخ</label><input class="input" id="from" name="from" type="date" value="{{ today.isoformat() }}" required></div>
+    <div class="field"><label for="days">عدد الأيام</label><input class="input num" id="days" name="days" type="number" min="1" max="30" value="1" required></div>
+    <div class="field full"><label for="reason">رقم التقرير الطبي (صحتي)</label><input class="input" id="reason" name="reason" required maxlength="100"></div></div>
+  {% elif rtype == 'permission' %}
+    <div class="callout">{{ rule_text('permission') }}. الحد الشهري {{ p.PERMISSION_MONTHLY_MAX }} ساعات. ارفعه قبل أو خلال 7 أيام، والنظام يطابقه مع البصمة فلا يُحتسب تأخيرًا.</div>
+    <div class="form-grid"><div class="field"><label for="date">التاريخ</label><input class="input" id="date" name="date" type="date" value="{{ default_from.isoformat() }}" required></div>
+    <div class="field"><label for="start">من الساعة</label><input class="input num" id="start" name="start" type="time" value="08:00" required></div>
+    <div class="field"><label for="hours">عدد الساعات</label><select class="input" id="hours" name="hours">{% for h in [0.5,1,1.5,2,2.5,3,3.5,4] %}<option value="{{ h }}" {{ 'selected' if h == 1 }}>{{ h }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="reason">السبب</label><input class="input" id="reason" name="reason" maxlength="300"></div></div>
+  {% elif rtype == 'loan' %}
+    <div class="callout">الحد الأعلى {{ (e.basic * p.LOAN_MAX_BASIC_MULTIPLE)|money }} ريال ({{ p.LOAN_MAX_BASIC_MULTIPLE }} رواتب أساسية)، وسلفة واحدة قائمة فقط. يمر الطلب على مديرك ثم الرواتب.</div>
+    <div class="form-grid"><div class="field"><label for="amount">المبلغ (ريال)</label><input class="input num" id="amount" name="amount" type="number" min="500" step="100" value="5000" required></div>
+    <div class="field"><label for="months">عدد الأقساط</label><select class="input" id="months" name="months">{% for n in [2,3,4,5,6,8,10,12] %}<option {{ 'selected' if n == 4 }}>{{ n }}</option>{% endfor %}</select></div>
+    <div class="field full"><label for="reason">السبب</label><input class="input" id="reason" name="reason" maxlength="300"></div></div>
+  {% elif rtype == 'salary_cert' %}
+    <div class="callout">يصدر الخطاب فورًا ويوصلك بالإيميل.</div>
+    <div class="field"><label for="to">موجه إلى</label><input class="input" id="to" name="to" value="من يهمه الأمر" maxlength="120"></div>
+  {% elif rtype == 'exp_cert' %}
+    <div class="callout">تعتمدها الموارد البشرية ثم تصدر وتوصلك آليًا.</div>
+  {% elif rtype == 'resign' %}
+    <div class="callout warn">مهلة الإشعار {{ p.NOTICE_EMPLOYEE }} يومًا. مكافأتك التقديرية عند الاستقالة {{ eos.amount|money }} ريال ({{ eos.why }})</div>
+    <div class="form-grid"><div class="field"><label for="last_day">آخر يوم عمل</label><input class="input" id="last_day" name="last_day" type="date" value="{{ default_last.isoformat() }}" required></div>
+    <div class="field full"><label for="reason">السبب (اختياري)</label><input class="input" id="reason" name="reason" maxlength="300"></div></div>
+  {% endif %}
+  <div class="actions"><button class="btn primary">إرسال الطلب</button><a class="btn ghost" href="{{ url_for('main.dashboard') }}">إلغاء</a></div>
+</form>
+{% endblock %}

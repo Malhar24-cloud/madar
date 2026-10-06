@@ -1,0 +1,7 @@
+<div class="doc">{% include "letters/_head.html" %}
+<h3>تعريف بالراتب</h3>
+<p>إلى: {{ addressee }}</p>
+<p>تشهد {{ company }} بأن السيد/ة <b>{{ emp.name }}</b>، {{ emp.nationality }} الجنسية، رقم {{ 'الهوية' if emp.is_saudi else 'الإقامة' }} <span class="num">{{ emp.national_id or '—' }}</span>، يعمل لديها بوظيفة {{ emp.title }} منذ <span class="num">{{ emp.hire_date.strftime('%Y/%m/%d') }}</span>، ولا يزال على رأس العمل حتى تاريخه، ويتقاضى راتبًا شهريًا إجماليًا قدره <b class="num">{{ '{:,}'.format(emp.gross) }}</b> ريال، تفصيله كالتالي:</p>
+<table><tbody><tr><td>الراتب الأساسي</td><td class="num">{{ '{:,}'.format(emp.basic) }}</td></tr><tr><td>بدل السكن</td><td class="num">{{ '{:,}'.format(emp.housing) }}</td></tr><tr><td>بدل النقل</td><td class="num">{{ '{:,}'.format(emp.transport) }}</td></tr></tbody><tfoot><tr><td>الإجمالي</td><td class="num">{{ '{:,}'.format(emp.gross) }}</td></tr></tfoot></table>
+<p>وقد أُعطي هذا الخطاب بناءً على طلبه دون أدنى مسؤولية على الشركة.</p>
+<div class="sig"><div>مدير الموارد البشرية</div><div>الختم</div></div></div>

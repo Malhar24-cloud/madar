@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% block title %}إنهاء خدمة {{ e.name }}{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>تم إنهاء خدمة {{ e.name }}</h1><p>آخر يوم عمل {{ e.left_date|d }} · {{ 'استقالة' if e.left_reason == 'resign' else 'إنهاء من صاحب العمل' }}</p></div></div>
+<div class="callout good"><b>لا يستطيع الموظف الدخول لمدار الآن.</b> الحساب معطّل، وكل جلساته انتهت، وكل روابط الموافقة أو التفعيل المعلقة أُلغيت.</div>
+<div class="grid-2e">
+  <div class="panel"><div class="panel-h"><h2>ما نفذه النظام</h2></div><ul class="list">
+    {% for s in r.steps %}<li class="item"><span class="dot good"></span><div><b>{{ s }}</b></div><span></span></li>{% endfor %}
+    <li class="item"><span class="dot good"></span><div><b>إلغاء الطلبات المعلقة</b></div><span></span></li>
+    <li class="item"><span class="dot good"></span><div><b>إصدار خطاب {{ r.letter.number }}</b><p><a href="{{ url_for('documents.letter_view', letter_id=r.letter.id) }}">عرض الخطاب</a></p></div><span></span></li>
+    <li class="item"><span class="dot warn"></span><div><b>إشعار للموظف بانتظار موافقتك</b><p><a href="{{ url_for('documents.outbox') }}">المراسلات</a></p></div><span></span></li>
+  </ul></div>
+  <div class="panel"><div class="panel-h"><h2>المستحقات</h2></div>
+    <div class="slip-row"><span>مكافأة نهاية الخدمة<br><small class="note">{{ r.eos.why }}</small></span><span class="num">{{ r.eos.amount|money2 }}</span></div>
+    <div class="slip-row plus"><span>تعويض الإجازات</span><span class="num">+{{ r.leave_cash|money2 }}</span></div>
+    <div class="slip-row minus"><span>سلف متبقية</span><span class="num">-{{ r.loans_left|money2 }}</span></div>
+    <div class="slip-row total"><span>الصافي</span><span class="num">{{ r.final|money2 }} ريال</span></div></div>
+</div>
+<div class="panel"><div class="panel-h"><h2>مهام أُنشئت للفريق</h2><span>الأنظمة الخارجية تحتاج ربطًا مباشرًا لتُقفل آليًا</span></div>
+  <ul class="list"><li class="item"><span class="dot bad"></span><div><b>سحب الصلاحيات الخارجية</b><p>{{ r.systems|join('، ') }}</p></div><span class="chip c-mute">مدير الموارد البشرية</span></li>
+  {% if r.assets %}<li class="item"><span class="dot warn"></span><div><b>استرجاع العهد</b><p>{% for a in r.assets %}{{ a.type }} ({{ a.tag }}){{ '، ' if not loop.last }}{% endfor %}</p></div><span class="chip c-mute">مدير الموارد البشرية</span></li>{% endif %}
+  <li class="item"><span class="dot"></span><div><b>صرف المستحقات</b><p>{{ r.final|money }} ريال</p></div><span class="chip c-mute">الرواتب</span></li></ul></div>
+<a class="btn" href="{{ url_for('employees.detail', emp_id=e.id) }}">ملف الموظف</a>
+{% endblock %}

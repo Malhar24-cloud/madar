@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% block title %}تفعيل الحساب{% endblock %}
+{% block public %}
+<div class="auth"><form class="panel" method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <a class="brand" href="#"><i></i><div><b>مدار</b><small>{{ company }}</small></div></a>
+  <h1 style="font-size:20px">تفعيل الحساب برمز</h1>
+  <p class="note">للموظفين اللي ما عندهم بريد. الرمز تستلمه من الموارد البشرية.</p>
+  {% if error %}<div class="flash bad" role="alert">{{ error }}</div>{% endif %}
+  <div class="field"><label for="code">الرقم الوظيفي</label><input class="input mono" id="code" name="code" required placeholder="EMP-1018" value="{{ request.form.code or '' }}"></div>
+  <div class="field"><label for="activation">رمز التفعيل</label><input class="input mono" id="activation" name="activation" required placeholder="XXXX-XXXX" autocomplete="off"></div>
+  <div class="field"><label for="password">كلمة مرور جديدة</label><input class="input" id="password" name="password" type="password" autocomplete="new-password" required minlength="10"><small>10 أحرف على الأقل، حروف إنجليزية وأرقام.</small></div>
+  <div class="field"><label for="password2">تأكيد كلمة المرور</label><input class="input" id="password2" name="password2" type="password" autocomplete="new-password" required></div>
+  <button class="btn primary">تفعيل</button>
+  <a class="note" href="{{ url_for('auth.login') }}">رجوع لتسجيل الدخول</a>
+</form></div>
+{% endblock %}

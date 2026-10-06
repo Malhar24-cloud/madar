@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% block title %}المساعد الذكي{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>المساعد الذكي</h1><p>{{ 'يجاوب من بياناتك فقط.' if not (current_user.is_staff or current_user.is_manager) else 'يجاوب حسب صلاحياتك: الصلاحيات تُطبق في الخادم، والمساعد ما يشوف إلا المسموح لك.' }}</p></div>
+  <div class="actions"><span class="chip {{ 'c-good' if ai_on else 'c-mute' }}">{{ 'Claude متصل' if ai_on else 'وضع محلي (بدون مفتاح API)' }}</span>
+  <form method="post" action="{{ url_for('assistant.clear') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn sm ghost">مسح المحادثة</button></form></div></div>
+<div class="panel chat">
+  <div class="msgs">
+    {% if not history %}<div class="msg assistant">أهلًا {{ current_user.display_name.split()[0] }}! اسألني عن الإجازات أو الرواتب أو الطلبات أو العقود أو السياسات.</div>{% endif %}
+    {% for h in history %}<div class="msg {{ h.role }}">{{ h.text }}</div>{% endfor %}
+    <span id="end"></span>
+  </div>
+  <form class="composer" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="suggest">{% for s in suggest %}<button type="button" data-suggest="{{ s }}">{{ s }}</button>{% endfor %}</div>
+    <div class="send-row"><input class="input" id="q" name="q" autocomplete="off" maxlength="800" placeholder="اكتب سؤالك…" aria-label="سؤالك" required><button class="btn primary">إرسال</button></div>
+  </form>
+</div>
+{% endblock %}

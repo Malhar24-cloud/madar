@@ -1,0 +1,70 @@
+{% extends "base.html" %}{% import "_m.html" as m %}{% block title %}{{ e.name }}{% endblock %}
+{% block content %}
+<div class="topbar"><div style="display:flex;gap:12px;align-items:center"><span class="av" style="width:46px;height:46px">{{ e.initials }}</span><div><h1>{{ e.name }}</h1><p>{{ e.title }} · {{ e.department }} · <span class="num">{{ e.code }}</span></p></div></div>
+  <div class="actions">{{ m.status(e) }}
+    {% if e.status == 'active' and (current_user.can('changes','hiring','payroll') or current_user.is_manager) and e.id != current_user.employee_id %}<a class="btn sm" href="{{ url_for('requests.change', emp=e.id) }}">طلب تعديل</a>{% endif %}
+    {% if e.status == 'active' and current_user.can('hiring') and e.user and not e.email %}<form method="post" action="{{ url_for('admin.new_activation', emp_id=e.id) }}">{{ m.csrf() }}<button class="btn sm">رمز تفعيل جديد</button></form>{% endif %}
+  </div></div>
+<div class="grid-2">
+  <div class="panel"><div class="panel-h"><h2>البيانات</h2></div><dl class="kv">
+    <div><dt>البريد</dt><dd class="mono" style="font-size:13px">{{ e.email }}</dd></div>
+    <div><dt>الجنسية</dt><dd>{{ e.nationality }}</dd></div>
+    <div><dt>المدير المباشر</dt><dd>{{ e.manager.name if e.manager else '—' }}</dd></div>
+    <div><dt>تاريخ المباشرة</dt><dd class="num">{{ e.hire_date|d }}</dd></div>
+    <div><dt>مدة الخدمة</dt><dd>{{ '%.1f'|format(e.tenure_years) }} سنة</dd></div>
+    <div><dt>العقد</dt><dd>{{ e.contract_label }}{% if e.end_date %} · ينتهي <span class="num">{{ e.end_date|d }}</span>{% endif %}</dd></div>
+    {% if show_salary %}<div><dt>{{ 'رقم الهوية' if e.is_saudi else 'رقم الإقامة' }}</dt><dd class="num">{{ e.national_id or '—' }}</dd></div>
+    <div><dt>البنك</dt><dd>{{ e.bank or '—' }} · <span class="num">{{ (e.iban[:4] ~ ' •••• ' ~ e.iban[-4:]) if e.iban else '—' }}</span></dd></div>{% endif %}
+    {% if e.iqama_expiry %}<div><dt>انتهاء الإقامة</dt><dd class="num">{{ e.iqama_expiry|d }}</dd></div>{% endif %}
+    <div><dt>الجوال</dt><dd class="num">{{ e.phone or '—' }}</dd></div>
+    <div><dt>رقم البصمة</dt><dd class="num">{{ e.attendance_id or '—' }}</dd></div>
+    {% if show_salary and e.is_saudi %}<div><dt>نظام التأمينات</dt><dd>{{ 'الجديد (بعد 2024-07-03)' if e.gosi_new_system else 'السابق' }} · {{ '%.2f'|format(gosi_rates[0]*100) }}%</dd></div>{% endif %}
+    {% if e.active_delegate %}<div><dt>مفوَّض أثناء غيابه</dt><dd>{{ e.delegate.name }} حتى {{ e.delegate_until|d }}</dd></div>{% endif %}
+    <div><dt>حساب مدار</dt><dd>{{ ('مفعّل' if e.user.active else 'معطّل') if e.user else 'لا يوجد' }}{% if e.user and not e.email %} · يدخل برقمه الوظيفي{% endif %}</dd></div>
+  </dl></div>
+  <div class="panel"><div class="panel-h"><h2>الإجازات</h2></div>{{ m.leave(e) }}
+    <dl class="kv" style="margin-top:12px"><div><dt>الاستحقاق</dt><dd>{{ e.entitlement }} يوم</dd></div><div><dt>المستخدم</dt><dd>{{ e.leave_used }} يوم</dd></div><div><dt>مرضية مستخدمة</dt><dd>{{ e.sick_used }} من {{ p.SICK_FULL_PAY_DAYS }} بأجر كامل</dd></div>
+    {% if e.in_probation %}<div><dt>فترة التجربة</dt><dd>باقي {{ e.probation_left }} يوم</dd></div>{% endif %}</dl></div>
+</div>
+{% if show_salary %}
+<div class="grid-2e">
+  <div class="panel"><div class="panel-h"><h2>الراتب الشهري</h2></div>
+    <div class="slip-row"><span>الأساسي</span><span class="num">{{ e.basic|money }}</span></div>
+    <div class="slip-row"><span>السكن</span><span class="num">{{ e.housing|money }}</span></div>
+    <div class="slip-row"><span>النقل</span><span class="num">{{ e.transport|money }}</span></div>
+    <div class="slip-row minus"><span>التأمينات</span><span class="num">-{{ gosi|money2 }}</span></div>
+    {% for l in e.loans if l.is_active %}<div class="slip-row minus"><span>قسط سلفة ({{ l.paid }}/{{ l.months }})</span><span class="num">-{{ l.installment|money2 }}</span></div>{% endfor %}
+    <div class="slip-row total"><span>الإجمالي قبل الاستقطاع</span><span class="num">{{ e.gross|money }} ريال</span></div></div>
+  <div class="panel"><div class="panel-h"><h2>كشوف الرواتب</h2></div>
+    <ul class="list">{% for s in payslips %}<li class="item"><span class="dot good"></span><div><b><a href="{{ url_for('payroll.slip', slip_id=s.id) }}">{{ s.run.month }}</a></b><p>الصافي {{ s.net|money2 }}</p></div><span></span></li>{% else %}<li class="empty">لا توجد كشوف بعد.</li>{% endfor %}</ul></div>
+</div>
+{% endif %}
+<div class="grid-2e">
+  <div class="panel"><div class="panel-h"><h2>الطلبات</h2></div>
+    <ul class="list">{% for r in requests %}<li class="item"><span class="dot {{ 'good' if r.status == 'approved' else ('bad' if r.status == 'rejected' else 'warn') }}"></span><div><b><a href="{{ url_for('requests.detail', req_id=r.id) }}">{{ types[r.type].label }}</a></b><p>{{ req_summary(r) }}</p></div><span class="note">{{ r.created_at|d }}</span></li>{% else %}<li class="empty">لا توجد طلبات.</li>{% endfor %}</ul></div>
+  <div class="panel"><div class="panel-h"><h2>الخطابات والعهد</h2></div>
+    <ul class="list">{% for l in letters %}<li class="item"><span class="dot"></span><div><b><a href="{{ url_for('documents.letter_view', letter_id=l.id) }}">{{ l.number }}</a></b><p>{{ l.created_at|d }}</p></div><span></span></li>{% endfor %}
+    {% for a in e.assets %}<li class="item"><span class="dot {{ 'good' if a.status == 'مسترجعة' else 'warn' if a.status != 'مع الموظف' else '' }}"></span><div><b>{{ a.type }}</b><p class="num">{{ a.tag }}</p></div><span class="chip c-mute">{{ a.status }}</span></li>{% endfor %}</ul></div>
+</div>
+{% if history %}<div class="panel"><div class="panel-h"><h2>سجل التعديلات</h2><span>الراتب والمسمى والقسم</span></div>
+  <div class="tbl"><table style="min-width:480px"><thead><tr><th>يسري من</th><th>الحقل</th><th>من</th><th>إلى</th></tr></thead><tbody>
+  {% for h in history %}<tr><td class="num">{{ h.effective|d }}</td><td>{{ {'basic':'الأساسي','housing':'السكن','transport':'النقل','title':'المسمى','department':'القسم','manager_id':'المدير'}.get(h.field, h.field) }}</td><td>{{ h.old }}</td><td><b>{{ h.new }}</b></td></tr>{% endfor %}
+  </tbody></table></div></div>{% endif %}
+{% if preview %}
+<form class="panel danger-zone" id="offboard" method="post" action="{{ url_for('employees.offboard', emp_id=e.id) }}" style="display:grid;gap:12px">
+  {{ m.csrf() }}
+  <div class="panel-h" style="margin:0"><h2>إنهاء الخدمة</h2><span>يعطّل الحساب فورًا ويسحب الصلاحيات ويحسب المستحقات</span></div>
+  <div class="form-grid">
+    <div class="field"><label for="reason">السبب</label><select class="input" id="reason" name="reason"><option value="term">إنهاء من صاحب العمل / انتهاء العقد</option><option value="resign">استقالة</option></select></div>
+    <div class="field"><label for="last_day">آخر يوم عمل</label><input class="input" id="last_day" name="last_day" type="date" value="{{ today.isoformat() }}" required></div>
+  </div>
+  <div class="tbl"><table style="min-width:420px"><thead><tr><th></th><th>عند الإنهاء</th><th>عند الاستقالة</th></tr></thead><tbody>
+    <tr><td>مكافأة نهاية الخدمة</td><td class="num">{{ preview.term.amount|money }}</td><td class="num">{{ preview.resign.amount|money }}</td></tr>
+    <tr><td>تعويض الإجازات ({{ e.leave_left }} يوم)</td><td class="num">{{ leave_cash|money }}</td><td class="num">{{ leave_cash|money }}</td></tr>
+    {% if loans_left %}<tr><td>سلف متبقية</td><td class="num">-{{ loans_left|money }}</td><td class="num">-{{ loans_left|money }}</td></tr>{% endif %}
+  </tbody><tfoot><tr><td>الصافي التقديري</td><td class="num">{{ (preview.term.amount + leave_cash - loans_left)|money }}</td><td class="num">{{ (preview.resign.amount + leave_cash - loans_left)|money }}</td></tr></tfoot></table></div>
+  <label class="check"><input type="checkbox" name="confirm" value="yes" required> أؤكد إنهاء خدمة {{ e.name }} وسحب كل صلاحياته</label>
+  <div><button class="btn danger">تنفيذ إنهاء الخدمة</button></div>
+</form>
+{% endif %}
+{% endblock %}

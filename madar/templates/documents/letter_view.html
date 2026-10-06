@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block title %}{{ label }} {{ l.number }}{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>{{ label }}</h1><p><span class="num">{{ l.number }}</span> · {{ l.employee.name }} · صدر {{ l.created_at|d }}{% if l.issued_by %} بواسطة {{ l.issued_by }}{% endif %}</p></div>
+  <div class="actions"><button class="btn primary" type="button" data-print>طباعة أو حفظ PDF</button></div></div>
+{{ l.html|safe }}
+{% endblock %}

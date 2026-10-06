@@ -1,0 +1,3 @@
+{% extends "base.html" %}{% block title %}تم{% endblock %}
+{% block public %}<div class="auth"><div class="panel"><a class="brand" href="#"><i></i><div><b>مدار</b></div></a><div class="flash {{ 'good' if ok else 'bad' }}">{{ text }}</div><p class="note">تقدر تغلق هذه الصفحة.</p></div></div>{% endblock %}
+{% block content %}{{ self.public() }}{% endblock %}

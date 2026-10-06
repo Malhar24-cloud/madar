@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% import "_m.html" as m %}{% block title %}كتابة إيميل{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>{{ 'كتابة إيميل بالذكاء' if ai_on else 'مسودة جديدة' }}</h1><p>{{ 'اكتب وش تبي تقول، والذكاء يكتب مسودة رسمية. تراجعها وتعتمدها قبل الإرسال.' if ai_on else 'بدون مفتاح API تُنشأ مسودة بسيطة من نصك.' }}</p></div></div>
+<form class="panel" method="post" style="display:grid;gap:12px;max-width:720px">{{ m.csrf() }}
+  <div class="form-grid">
+    <div class="field"><label for="employee_id">إلى</label><select class="input" id="employee_id" name="employee_id">{% for e in emps %}<option value="{{ e.id }}">{{ e.name }} · {{ e.title }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="tone">النبرة</label><select class="input" id="tone" name="tone"><option>رسمية ودودة</option><option>رسمية حازمة</option><option>تهنئة وشكر</option></select></div>
+    <div class="field full"><label for="goal">وش تبي تقول؟</label><textarea class="input" id="goal" name="goal" rows="4" required placeholder="مثال: نشكره على جهوده في مشروع الربع الأخير ونبلغه باعتماد دورة تدريبية له"></textarea></div>
+  </div>
+  <div><button class="btn primary">اكتب المسودة</button></div>
+</form>
+{% endblock %}

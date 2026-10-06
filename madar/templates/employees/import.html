@@ -1,0 +1,11 @@
+{% extends "base.html" %}{% import "_m.html" as m %}{% block title %}قراءة عقد{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>قراءة عقد بالذكاء الاصطناعي</h1><p>ارفع العقد، يستخرج النظام بياناته ويفحص البنود مقابل نظام العمل، وتراجعها قبل الاعتماد.</p></div>
+  <span class="chip {{ 'c-good' if ai_on else 'c-mute' }}">{{ 'Claude متصل' if ai_on else 'قواعد محلية (بدون مفتاح API)' }}</span></div>
+<form class="panel" method="post" enctype="multipart/form-data" style="display:grid;gap:14px;max-width:760px">
+  {{ m.csrf() }}
+  <div class="field"><label for="file">ملف العقد</label><input class="input" id="file" name="file" type="file" accept=".pdf,.docx,.txt,.md"><small>PDF نصي أو Word أو نص · حتى 5 ميجابايت · لا يُحفظ الملف على الخادم</small></div>
+  <div class="field"><label for="text">أو الصق نص العقد</label><textarea class="input" id="text" name="text" rows="12">{{ text or '' }}</textarea></div>
+  <div><button class="btn primary">استخرج البيانات</button></div>
+</form>
+{% endblock %}

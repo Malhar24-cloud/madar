@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% import "_m.html" as m %}{% block title %}التفويض{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>التفويض أثناء الإجازة</h1><p>حدد زميلًا يعتمد طلبات فريقك وأنت غائب، عشان ما تتعطل الطلبات. ينتهي التفويض تلقائيًا في التاريخ المحدد.</p></div></div>
+{% if me.active_delegate %}<div class="callout good">مفوَّض حاليًا: <b>{{ me.delegate.name }}</b> حتى {{ me.delegate_until|d }}.</div>{% endif %}
+<form class="panel" method="post" style="display:grid;gap:12px;max-width:560px">{{ m.csrf() }}
+  <div class="field"><label for="delegate_id">البديل</label><select class="input" id="delegate_id" name="delegate_id">{% for o in options %}<option value="{{ o.id }}" {{ 'selected' if me.delegate_id == o.id }}>{{ o.name }} · {{ o.title }}</option>{% endfor %}</select></div>
+  <div class="field"><label for="until">حتى تاريخ</label><input class="input" id="until" name="until" type="date" min="{{ today.isoformat() }}" required value="{{ me.delegate_until.isoformat() if me.delegate_until else '' }}"></div>
+  <div class="actions"><button class="btn primary">حفظ التفويض</button>{% if me.delegate_id %}<button class="btn" name="action" value="clear" formnovalidate>إلغاء التفويض</button>{% endif %}</div>
+</form>
+{% endblock %}

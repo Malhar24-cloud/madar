@@ -1,0 +1,19 @@
+{% extends "base.html" %}{% import "_m.html" as m %}{% block title %}بوابتي{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>أهلًا {{ e.first_name }}</h1><p>{{ e.title }} · {{ e.department }}{% if e.manager %} · مديرك {{ e.manager.name }}{% endif %}</p></div>
+  <div class="actions"><a class="btn" href="{{ url_for('employees.detail', emp_id=e.id) }}">ملفي الكامل</a></div></div>
+<div class="kpis">
+  <div class="kpi hi"><label>رصيد الإجازات</label><div class="v"><span class="num">{{ e.leave_left }}</span><small>من {{ e.entitlement }} يوم</small></div><div class="meter"><i style="width:{{ (e.leave_left / e.entitlement * 100)|round }}%;background:var(--accent-ink)"></i></div></div>
+  <div class="kpi"><label>آخر صافي راتب</label><div class="v">{% if payslip %}<span class="num">{{ payslip.net|money }}</span><small>ريال · {{ payslip.run.month }}</small>{% else %}—{% endif %}</div>{% if payslip %}<div class="sub"><a href="{{ url_for('payroll.slip', slip_id=payslip.id) }}">عرض الكشف</a></div>{% endif %}</div>
+  <div class="kpi"><label>سلف قائمة</label><div class="v"><span class="num">{{ loan_left|money }}</span><small>ريال</small></div><div class="sub">{{ 'تُخصم تلقائيًا من الراتب' if loan_left else 'لا توجد سلف' }}</div></div>
+  <div class="kpi"><label>طلبات مفتوحة</label><div class="v"><span class="num">{{ requests|selectattr('status','equalto','pending')|list|length }}</span></div><div class="sub">{{ letters|length }} خطاب صادر لك</div></div>
+</div>
+<div class="panel"><div class="panel-h"><h2>طلب جديد</h2><span>يُفحص آليًا ويُوجّه للمسؤول تلقائيًا</span></div>
+  <div class="actions">{% for k, t in types.items() if t.self %}<a class="btn" href="{{ url_for('requests.new', rtype=k) }}">{{ t.label }}</a>{% endfor %}</div></div>
+<div class="grid-2e">
+  <div class="panel"><div class="panel-h"><h2>طلباتي</h2><a href="{{ url_for('requests.index') }}">الكل</a></div>
+    <ul class="list">{% for r in requests %}<li class="item"><span class="dot {{ 'good' if r.status == 'approved' else ('bad' if r.status == 'rejected' else 'warn') }}"></span><div><b><a href="{{ url_for('requests.detail', req_id=r.id) }}">{{ req_label(r) }}</a></b><p>{{ r.created_at|d }}</p></div><span class="side-r"><span class="chip {{ 'c-good' if r.status == 'approved' else ('c-bad' if r.status == 'rejected' else 'c-warn') }}">{{ {'approved':'معتمد','rejected':'مرفوض','pending':'قيد المعالجة','cancelled':'ملغى'}[r.status] }}</span></span></li>{% else %}<li class="empty">لا توجد طلبات بعد.</li>{% endfor %}</ul></div>
+  <div class="panel"><div class="panel-h"><h2>خطاباتي</h2></div>
+    <ul class="list">{% for l in letters %}<li class="item"><span class="dot"></span><div><b><a href="{{ url_for('documents.letter_view', letter_id=l.id) }}">{{ l.number }}</a></b><p>{{ l.created_at|d }}</p></div><span></span></li>{% else %}<li class="empty">لا توجد خطابات.</li>{% endfor %}</ul></div>
+</div>
+{% endblock %}
